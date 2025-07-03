@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'https://unpkg.com/react@18/index.js';
-import ReactDOM from 'https://unpkg.com/react-dom@18/index.js';
+// React and ReactDOM are now assumed to be globally available via UMD bundles in index.html
+const { useState, useEffect } = React;
+const ReactDOM = window.ReactDOM; // Explicitly get ReactDOM from window
+
 // Lucide Icons are globally available via UMD build linked in index.html
-const { ShoppingCart, ChevronRight, User, Building, X, Info, ArrowLeft, Settings } = lucideReact; // 引入 Settings 圖示
+const { ShoppingCart, ChevronRight, User, Building, X, Info, ArrowLeft, Settings } = lucideReact;
 
 // 全局 Firebase 實例 (如果成功初始化)
 let firebaseApp = null;
@@ -292,7 +294,8 @@ function App() {
         const parsedConfig = JSON.parse(storedConfig);
         setFirebaseConfig(parsedConfig);
         // 嘗試初始化 Firebase
-        if (window.firebase && !firebaseApp) { // 檢查 window.firebase 是否可用且尚未初始化
+        // 確保 window.firebase 已經被 index.html 中的 <script type="module"> 載入並暴露
+        if (window.firebase && !firebaseApp) { 
           firebaseApp = window.firebase.initializeApp(parsedConfig);
           db = window.firebase.getFirestore(firebaseApp);
           auth = window.firebase.getAuth(firebaseApp);
@@ -303,6 +306,8 @@ function App() {
           // }).catch(error => {
           //   console.error("Anonymous sign-in failed:", error);
           // });
+        } else if (!window.firebase) {
+          console.warn("Firebase SDK not loaded. Please ensure Firebase scripts in index.html are uncommented and loaded correctly.");
         }
       } catch (e) {
         console.error("Failed to parse Firebase config from localStorage:", e);
@@ -717,4 +722,3 @@ function App() {
 
 // Render the App component into the root div
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
-
