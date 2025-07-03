@@ -46,7 +46,7 @@ const FirebaseConfigModal = ({ onClose, onSave, initialConfig, lang, translation
           className="absolute top-3 right-3 text-gray-400 hover:text-white transition-colors duration-300 rounded-full p-2 bg-gray-700 hover:bg-gray-600"
           aria-label={translations[lang].close}
         >
-          <X size={24} />
+          ✖ {/* Close icon */}
         </button>
         <h2 className="text-3xl font-bold mb-6 text-purple-400 border-b border-purple-700 pb-3">
           Firebase 設定
@@ -392,7 +392,7 @@ function App() {
             className="absolute top-3 right-3 text-gray-400 hover:text-white transition-colors duration-300 rounded-full p-2 bg-gray-700 hover:bg-gray-600"
             aria-label={translations[lang].close}
           >
-            <X size={24} />
+            ✖ {/* Close icon */}
           </button>
           <h2 className="text-3xl font-bold mb-6 text-red-400 border-b border-red-700 pb-3">
             {translations[lang].cartTitle}
@@ -478,14 +478,14 @@ function App() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
             <div className="bg-gray-900 p-6 rounded-xl shadow-lg border border-purple-800 transform hover:scale-105 transition-transform duration-300">
-              <User className="text-purple-400 mx-auto mb-4" size={48} />
+              <span className="text-purple-400 mx-auto mb-4 text-4xl">👤</span> {/* User icon */}
               <h2 className="text-3xl font-bold text-purple-300 mb-4">{translations[lang].ceoProfileTitle}</h2>
               <h3 className="text-2xl font-semibold text-red-300 mb-2">{translations[lang].ceoName}</h3>
               <p className="text-gray-300 leading-relaxed">{translations[lang].ceoBio}</p>
             </div>
 
             <div className="bg-gray-900 p-6 rounded-xl shadow-lg border border-purple-800 transform hover:scale-105 transition-transform duration-300">
-              <Building className="text-purple-400 mx-auto mb-4" size={48} />
+              <span className="text-purple-400 mx-auto mb-4 text-4xl">🏢</span> {/* Building icon */}
               <h2 className="text-3xl font-bold text-purple-300 mb-4">{translations[lang].companyProfileTitle}</h2>
               <p className="text-gray-300 leading-relaxed">{translations[lang].companyBio}</p>
             </div>
@@ -498,7 +498,7 @@ function App() {
             onClick={onEnterShop}
             className="bg-red-600 hover:bg-red-500 text-white text-2xl font-bold py-4 px-8 rounded-full shadow-lg transform hover:scale-110 transition-all duration-300 flex items-center justify-center mx-auto"
           >
-            {translations[lang].enterShop} <ChevronRight className="ml-3" size={28} />
+            {translations[lang].enterShop} <span className="ml-3">▶</span> {/* ChevronRight icon */}
           </button>
         </div>
       </div>
@@ -522,7 +522,7 @@ function App() {
             onClick={onShowFirebaseConfig}
             className="bg-purple-700 hover:bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-300 shadow-md flex items-center space-x-2"
           >
-            <Settings size={18} />
+            ⚙️ {/* Settings icon */}
             <span>{translations[lang].firebaseSettings}</span>
           </button>
 
@@ -531,7 +531,7 @@ function App() {
             onClick={onViewIntro}
             className="bg-purple-700 hover:bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-300 shadow-md flex items-center space-x-2"
           >
-            <Info size={18} />
+            ℹ️ {/* Info icon */}
             <span>{translations[lang].aboutUs}</span>
           </button>
 
@@ -549,7 +549,7 @@ function App() {
             className="relative bg-red-700 hover:bg-red-600 text-white p-3 rounded-full shadow-md transform hover:scale-105 transition-transform duration-300"
             aria-label={translations[lang].viewCart}
           >
-            <ShoppingCart size={24} />
+            🛒 {/* ShoppingCart icon */}
             {cartCount > 0 && (
               <span className="absolute -top-1 -right-1 bg-purple-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
                 {cartCount}
@@ -661,7 +661,7 @@ function App() {
               onClick={onBackToShop}
               className="bg-gray-700 hover:bg-gray-600 text-gray-300 text-xl font-semibold py-4 px-8 rounded-full shadow-md transform hover:scale-105 transition-all duration-300 flex items-center justify-center"
             >
-              <ArrowLeft size={24} className="mr-2" /> {translations[lang].backToShop}
+              ⬅️ {/* ArrowLeft icon */} {translations[lang].backToShop}
             </button>
           </div>
         </div>
@@ -727,4 +727,3 @@ function App() {
 
 // Render the App component into the root div
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
-
