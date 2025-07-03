@@ -1,5 +1,5 @@
 // Explicitly get React and ReactDOM from the global window object
-// This is crucial for compatibility when main.js is a regular script
+// This is crucial for compatibility when script.js is a regular script
 const React = window.React;
 const ReactDOM = window.ReactDOM;
 
@@ -170,7 +170,7 @@ function App() {
       companyProfileTitle: '公司簡介',
       ceoName: '黑川 智慧',
       ceoBio: '黑川集團董事長黑川智慧以其創新的領導力和卓越的遠見而聞名。在他的指導下，公司在技術和客戶滿意度方面樹立了新的標準。',
-      companyBio: '黑川集團是一家致力於提供高品質產品和卓越客戶服務的尖端企業。我們致力於推動創新，豐富客戶的生活。',
+      companyCompany: '黑川集團是一家致力於提供高品質產品和卓越客戶服務的尖端企業。我們致力於推動創新，豐富客戶的生活。',
       enterShop: '進入購物頁面',
       productsTitle: '我們的產品',
       addToCart: '加入購物車',
@@ -241,7 +241,7 @@ function App() {
       companyProfileTitle: '회사 프로필',
       ceoName: '쿠로카와 치에',
       ceoBio: '쿠로카와 그룹의 회장인 쿠로카와 치에는 혁신적인 리더십과 탁월한 비전으로 유명합니다. 그의 지도 아래 회사는 기술과 고객 만족도에서 새로운 기준을 세웠습니다.',
-      companyBio: '쿠로카와 그룹은 고품질 제품과 우수한 고객 서비스를 제공하는 데 전념하는 최첨단 기업입니다。私たちは革新を推進し、お客様の生活を豊かにすることを目指しています。',
+      companyCompany: '쿠로카와 그룹은 고품질 제품과 우수한 고객 서비스를 제공하는 데 전념하는 최첨단 기업입니다。私たちは革新を推進し、お客様の生活を豊かにすることを目指しています。',
       enterShop: '쇼핑 시작',
       productsTitle: '제품',
       addToCart: '장바구니에 추가',
@@ -260,7 +260,7 @@ function App() {
         'zh-cn': '간체 중국어',
         ko: '한국어',
       },
-      productDescription: '고품질 소재로 제작된 현대적이고 세련된 제품입니다.',
+      productDescription: '고품질 소재로 제작된 현대적이고 세련된 제품입니다。',
       allCategories: '모든 카테고리',
       categoryHypnosis: '최면',
       categoryPossession: '빙의',
