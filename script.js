@@ -1,13 +1,9 @@
 // Explicitly get React and ReactDOM from the global window object
-// This is crucial for compatibility when script.js is a regular script
 const React = window.React;
 const ReactDOM = window.ReactDOM;
 
 // Now destructure from the React object
 const { useState, useEffect } = React;
-
-// Lucide Icons REMOVED - using text/emojis instead
-// const { ShoppingCart, ChevronRight, User, Building, X, Info, ArrowLeft, Settings } = lucideReact; // This line was causing the ReferenceError
 
 // 全局 Firebase 實例 (如果成功初始化)
 let firebaseApp = null;
@@ -123,6 +119,22 @@ function App() {
       placeOrder: '注文を確定する',
       orderSuccess: 'ご注文ありがとうございます！',
       firebaseSettings: 'Firebase 設定', // 新增 Firebase 設定翻譯
+      adminPanel: '管理後台', // 新增管理後台翻譯
+      addProduct: '新增商品',
+      editProduct: '編輯商品',
+      deleteProduct: '刪除商品',
+      productName: '商品名稱',
+      productPrice: '商品價格',
+      productImage: '商品圖片URL',
+      productCategory: '商品類別',
+      save: '儲存',
+      cancel: '取消',
+      confirmDelete: '確定要刪除此商品嗎？',
+      productAdded: '商品已新增！',
+      productUpdated: '商品已更新！',
+      productDeleted: '商品已刪除！',
+      fetchingProducts: '正在載入商品...',
+      noProducts: '目前沒有商品。',
     },
     en: {
       appName: 'FAU SHOPPING',
@@ -161,6 +173,22 @@ function App() {
       placeOrder: 'Place Order',
       orderSuccess: 'Thank you for your order!',
       firebaseSettings: 'Firebase Settings', // 新增 Firebase 設定翻譯
+      adminPanel: 'Admin Panel', // 新增管理後台翻譯
+      addProduct: 'Add Product',
+      editProduct: 'Edit Product',
+      deleteProduct: 'Delete Product',
+      productName: 'Product Name',
+      productPrice: 'Product Price',
+      productImage: 'Product Image URL',
+      productCategory: 'Product Category',
+      save: 'Save',
+      cancel: 'Cancel',
+      confirmDelete: 'Are you sure you want to delete this product?',
+      productAdded: 'Product added successfully!',
+      productUpdated: 'Product updated successfully!',
+      productDeleted: 'Product deleted successfully!',
+      fetchingProducts: 'Fetching products...',
+      noProducts: 'No products available.',
     },
     'zh-tw': {
       appName: 'FAU SHOPPING',
@@ -199,6 +227,22 @@ function App() {
       placeOrder: '確認下單',
       orderSuccess: '感謝您的訂單！',
       firebaseSettings: 'Firebase 設定', // 新增 Firebase 設定翻譯
+      adminPanel: '管理後台', // 新增管理後台翻譯
+      addProduct: '新增商品',
+      editProduct: '編輯商品',
+      deleteProduct: '刪除商品',
+      productName: '商品名稱',
+      productPrice: '商品價格',
+      productImage: '商品圖片URL',
+      productCategory: '商品類別',
+      save: '儲存',
+      cancel: '取消',
+      confirmDelete: '確定要刪除此商品嗎？',
+      productAdded: '商品已新增！',
+      productUpdated: '商品已更新！',
+      productDeleted: '商品已刪除！',
+      fetchingProducts: '正在載入商品...',
+      noProducts: '目前沒有商品。',
     },
     'zh-cn': {
       appName: 'FAU SHOPPING',
@@ -268,20 +312,8 @@ function App() {
     },
   };
 
-  // 模擬商品資料，新增 category 屬性
-  const products = [
-    { id: 1, name: '時尚耳機', price: 299, image: 'https://placehold.co/400x300/333333/FFFFFF?text=Product+1', category: '催眠類' },
-    { id: 2, name: '智能手錶', price: 199, image: 'https://placehold.co/400x300/4B0082/FFFFFF?text=Product+2', category: '附身類' },
-    { id: 3, name: '無線充電器', price: 49, image: 'https://placehold.co/400x300/8B0000/FFFFFF?text=Product+3', category: '特工用品' },
-    { id: 4, name: '便攜式音箱', price: 79, image: 'https://placehold.co/400x300/333333/FFFFFF?text=Product+4', category: 'TSF類' },
-    { id: 5, 'name': '高解析度顯示器', price: 499, image: 'https://placehold.co/400x300/4B0082/FFFFFF?text=Product+5', category: '催眠類' },
-    { id: 6, 'name': '人體工學鍵盤', price: 129, image: 'https://placehold.co/400x300/8B0000/FFFFFF?text=Product+6', category: '附身類' },
-    { id: 7, 'name': '迷你無人機', price: 150, image: 'https://placehold.co/400x300/333333/FFFFFF?text=Product+7', category: '特工用品' },
-    { id: 8, 'name': '變形眼鏡', price: 89, image: 'https://placehold.co/400x300/4B0082/FFFFFF?text=Product+8', category: 'TSF類' },
-  ];
-
   // 狀態管理：當前頁面、購物車、當前語言、購物車彈窗是否顯示、選定的商品分類
-  const [currentPage, setCurrentPage] = useState('intro'); // 'intro', 'shop', 或 'checkout'
+  const [currentPage, setCurrentPage] = useState('intro'); // 'intro', 'shop', 'checkout', 'admin'
   const [cart, setCart] = useState([]);
   const [currentLanguage, setCurrentLanguage] = useState('ja'); // 預設日文
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -289,6 +321,8 @@ function App() {
   const [orderPlacedMessage, setOrderPlacedMessage] = useState(''); // 訂單成功訊息
   const [showFirebaseConfigModal, setShowFirebaseConfigModal] = useState(false); // 控制 Firebase 設定彈窗顯示
   const [firebaseConfig, setFirebaseConfig] = useState(null); // 儲存 Firebase 配置
+  const [productsData, setProductsData] = useState([]); // 從 Firestore 載入的商品數據
+  const [isFirebaseReady, setIsFirebaseReady] = useState(false); // Firebase 是否初始化完成
 
   // 載入 Firebase 配置並初始化 Firebase
   useEffect(() => {
@@ -297,28 +331,54 @@ function App() {
       try {
         const parsedConfig = JSON.parse(storedConfig);
         setFirebaseConfig(parsedConfig);
-        // 嘗試初始化 Firebase
-        // 確保 window.firebase 已經被 index.html 中的 <script type="module"> 載入並暴露
         if (window.firebase && !firebaseApp) { 
           firebaseApp = window.firebase.initializeApp(parsedConfig);
           db = window.firebase.getFirestore(firebaseApp);
           auth = window.firebase.getAuth(firebaseApp);
           console.log("Firebase initialized from stored config.");
-          // 可以選擇在此處進行匿名登入或其他認證
-          // window.firebase.signInAnonymously(auth).then(userCredential => {
-          //   console.log("Signed in anonymously:", userCredential.user.uid);
-          // }).catch(error => {
-          //   console.error("Anonymous sign-in failed:", error);
-          // });
+          
+          // 匿名登入
+          window.firebase.signInAnonymously(auth).then(userCredential => {
+            console.log("Signed in anonymously:", userCredential.user.uid);
+            setIsFirebaseReady(true); // Firebase 認證完成
+          }).catch(error => {
+            console.error("Anonymous sign-in failed:", error);
+            setIsFirebaseReady(false);
+          });
+
         } else if (!window.firebase) {
           console.warn("Firebase SDK not loaded. Please ensure Firebase scripts in index.html are uncommented and loaded correctly.");
+          setIsFirebaseReady(false);
         }
       } catch (e) {
         console.error("Failed to parse Firebase config from localStorage:", e);
         localStorage.removeItem('firebaseConfig'); // 清除無效配置
+        setIsFirebaseReady(false);
       }
+    } else {
+      setIsFirebaseReady(false); // 沒有配置，Firebase 不準備好
     }
   }, []); // 只在組件掛載時運行一次
+
+  // 從 Firestore 實時獲取商品數據
+  useEffect(() => {
+    if (isFirebaseReady && db) {
+      const productsColRef = window.firebase.collection(db, 'products');
+      const unsubscribe = window.firebase.onSnapshot(productsColRef, (snapshot) => {
+        const productsList = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setProductsData(productsList);
+        console.log("Products fetched from Firestore:", productsList);
+      }, (error) => {
+        console.error("Error fetching products from Firestore:", error);
+      });
+
+      // 清理訂閱
+      return () => unsubscribe();
+    }
+  }, [isFirebaseReady, db]); // 依賴於 Firebase 是否準備好和 db 實例
 
   // 語言切換邏輯
   const handleLanguageChange = () => {
@@ -349,34 +409,15 @@ function App() {
 
   // 根據選定的分類篩選商品
   const filteredProducts = selectedCategory === 'all'
-    ? products
-    : products.filter(product => product.category === selectedCategory);
+    ? productsData
+    : productsData.filter(product => product.category === selectedCategory);
 
   // 處理 Firebase 配置儲存
   const handleSaveFirebaseConfig = (config) => {
     localStorage.setItem('firebaseConfig', JSON.stringify(config));
     setFirebaseConfig(config);
-    // 重新初始化 Firebase (如果已經載入 SDK)
-    if (window.firebase) {
-      // 避免重複初始化，如果已經有 app 實例則不再初始化
-      if (firebaseApp) {
-        // 如果需要更新配置，可能需要先刪除舊的 app 實例
-        // window.firebase.deleteApp(firebaseApp).then(() => {
-        //   firebaseApp = window.firebase.initializeApp(config);
-        //   db = window.firebase.getFirestore(firebaseApp);
-        //   auth = window.firebase.getAuth(firebaseApp);
-        //   console.log("Firebase re-initialized with new config.");
-        // });
-        console.warn("Firebase app already initialized. Restart the page to apply new config if significant changes were made.");
-      } else {
-        firebaseApp = window.firebase.initializeApp(config);
-        db = window.firebase.getFirestore(firebaseApp);
-        auth = window.firebase.getAuth(firebaseApp);
-        console.log("Firebase initialized with new config.");
-      }
-    } else {
-      console.warn("Firebase SDK not loaded. Please uncomment Firebase scripts in index.html.");
-    }
+    // 重新載入頁面以應用新的 Firebase 配置
+    window.location.reload();
   };
 
   // 購物車彈窗組件
@@ -505,7 +546,7 @@ function App() {
   );
 
   // 購物頁面組件
-  const ShopPage = ({ products, onAddToCart, cartCount, onViewCart, lang, translations, onCategoryChange, selectedCategory, onViewIntro, onShowFirebaseConfig }) => (
+  const ShopPage = ({ products, onAddToCart, cartCount, onViewCart, lang, translations, onCategoryChange, selectedCategory, onViewIntro, onNavigateToAdmin }) => (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-purple-900 text-white flex flex-col">
       {/* 頂部導航欄 */}
       <header className="w-full bg-gray-900 p-4 shadow-xl flex items-center justify-center relative">
@@ -516,13 +557,13 @@ function App() {
 
         {/* 右側按鈕組 */}
         <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center space-x-4">
-          {/* Firebase 設定按鈕 */}
+          {/* 管理後台按鈕 */}
           <button
-            onClick={onShowFirebaseConfig}
+            onClick={onNavigateToAdmin}
             className="bg-purple-700 hover:bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-300 shadow-md flex items-center space-x-2"
           >
             ⚙️ {/* Settings icon */}
-            <span>{translations[lang].firebaseSettings}</span>
+            <span>{translations[lang].adminPanel}</span>
           </button>
 
           {/* 簡介按鈕 */}
@@ -583,7 +624,7 @@ function App() {
             <ProductCard
               key={product.id}
               product={product}
-              onAddToCart={onAddToCart}
+              onAddToCart={addToCart} // Pass addToCart directly
               lang={lang}
               translations={translations}
             />
@@ -668,6 +709,250 @@ function App() {
     );
   };
 
+  // 管理後台頁面組件
+  const AdminPage = ({ products, lang, translations, onBackToShop, isFirebaseReady }) => {
+    const [editingProduct, setEditingProduct] = useState(null); // null for add, product object for edit
+    const [name, setName] = useState('');
+    const [price, setPrice] = useState('');
+    const [image, setImage] = useState('');
+    const [category, setCategory] = useState('催眠類'); // Default category
+    const [message, setMessage] = useState(''); // Feedback message
+
+    useEffect(() => {
+      if (editingProduct) {
+        setName(editingProduct.name);
+        setPrice(editingProduct.price);
+        setImage(editingProduct.image);
+        setCategory(editingProduct.category);
+      } else {
+        setName('');
+        setPrice('');
+        setImage('');
+        setCategory('催眠類');
+      }
+    }, [editingProduct]);
+
+    const showMessage = (msg) => {
+      setMessage(msg);
+      setTimeout(() => setMessage(''), 3000);
+    };
+
+    const handleAddOrUpdateProduct = async (e) => {
+      e.preventDefault();
+      if (!db) {
+        console.error("Firestore is not initialized.");
+        showMessage("Firestore 未初始化，無法操作。");
+        return;
+      }
+
+      const productData = {
+        name,
+        price: parseFloat(price),
+        image,
+        category
+      };
+
+      try {
+        if (editingProduct) {
+          // Update product
+          const productRef = window.firebase.doc(db, 'products', editingProduct.id);
+          await window.firebase.setDoc(productRef, productData); // Use setDoc to completely replace or create
+          showMessage(translations[lang].productUpdated);
+        } else {
+          // Add new product
+          const productsColRef = window.firebase.collection(db, 'products');
+          await window.firebase.addDoc(productsColRef, productData);
+          showMessage(translations[lang].productAdded);
+        }
+        setEditingProduct(null); // Clear form
+        setName('');
+        setPrice('');
+        setImage('');
+        setCategory('催眠類');
+      } catch (error) {
+        console.error("Error adding/updating product:", error);
+        showMessage("操作失敗：" + error.message);
+      }
+    };
+
+    const handleDeleteProduct = async (productId) => {
+      if (!db) {
+        console.error("Firestore is not initialized.");
+        showMessage("Firestore 未初始化，無法操作。");
+        return;
+      }
+      if (window.confirm(translations[lang].confirmDelete)) {
+        try {
+          const productRef = window.firebase.doc(db, 'products', productId);
+          await window.firebase.deleteDoc(productRef);
+          showMessage(translations[lang].productDeleted);
+        } catch (error) {
+          console.error("Error deleting product:", error);
+          showMessage("刪除失敗：" + error.message);
+        }
+      }
+    };
+
+    if (!isFirebaseReady) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-purple-900 text-white flex items-center justify-center p-4">
+          <div className="bg-gray-800 p-8 rounded-lg shadow-xl text-center">
+            <p className="text-xl text-red-400">{translations[lang].fetchingProducts}</p>
+            <p className="text-gray-400 mt-2">請確保 Firebase 配置已儲存並重新載入頁面。</p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-purple-900 text-white flex flex-col items-center p-4">
+        <div className="bg-gray-800 bg-opacity-90 rounded-2xl shadow-2xl p-8 md:p-12 max-w-5xl w-full border border-purple-700">
+          <h2 className="text-4xl font-extrabold text-red-400 mb-8 border-b border-red-700 pb-4 text-center">
+            {translations[lang].adminPanel}
+          </h2>
+
+          {message && (
+            <div className="bg-green-700 text-white text-center py-3 px-6 rounded-lg mb-6 text-lg font-semibold shadow-lg animate-fade-in">
+              {message}
+            </div>
+          )}
+
+          {/* 新增/編輯商品表單 */}
+          <form onSubmit={handleAddOrUpdateProduct} className="bg-gray-900 p-6 rounded-xl shadow-lg mb-8 border border-purple-800">
+            <h3 className="text-2xl font-bold text-purple-300 mb-6">
+              {editingProduct ? translations[lang].editProduct : translations[lang].addProduct}
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label htmlFor="productName" className="block text-gray-300 text-sm font-semibold mb-1">
+                  {translations[lang].productName}:
+                </label>
+                <input
+                  type="text"
+                  id="productName"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full p-3 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="productPrice" className="block text-gray-300 text-sm font-semibold mb-1">
+                  {translations[lang].productPrice}:
+                </label>
+                <input
+                  type="number"
+                  id="productPrice"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  className="w-full p-3 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
+                  step="0.01"
+                  required
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label htmlFor="productImage" className="block text-gray-300 text-sm font-semibold mb-1">
+                  {translations[lang].productImage}:
+                </label>
+                <input
+                  type="url"
+                  id="productImage"
+                  value={image}
+                  onChange={(e) => setImage(e.target.value)}
+                  className="w-full p-3 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
+                  placeholder="https://example.com/image.jpg"
+                  required
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label htmlFor="productCategory" className="block text-gray-300 text-sm font-semibold mb-1">
+                  {translations[lang].productCategory}:
+                </label>
+                <select
+                  id="productCategory"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="w-full p-3 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
+                  required
+                >
+                  <option value="催眠類">{translations[lang].categoryHypnosis}</option>
+                  <option value="附身類">{translations[lang].categoryPossession}</option>
+                  <option value="TSF類">{translations[lang].categoryTSF}</option>
+                  <option value="特工用品">{translations[lang].categoryAgentGear}</option>
+                </select>
+              </div>
+            </div>
+            <div className="mt-8 flex justify-end space-x-4">
+              <button
+                type="submit"
+                className="bg-red-600 hover:bg-red-500 text-white px-6 py-3 rounded-full font-semibold transition-colors duration-300 shadow-lg transform hover:scale-105"
+              >
+                {translations[lang].save}
+              </button>
+              {editingProduct && (
+                <button
+                  type="button"
+                  onClick={() => setEditingProduct(null)}
+                  className="bg-gray-700 hover:bg-gray-600 text-gray-300 px-6 py-3 rounded-full font-semibold transition-colors duration-300 shadow-md"
+                >
+                  {translations[lang].cancel}
+                </button>
+              )}
+            </div>
+          </form>
+
+          {/* 商品列表 */}
+          <h3 className="text-2xl font-bold text-purple-300 mb-6 mt-8 border-b border-purple-700 pb-3">
+            現有商品
+          </h3>
+          {products.length === 0 ? (
+            <p className="text-center text-gray-400 text-lg">{translations[lang].noProducts}</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {products.map((product) => (
+                <div key={product.id} className="bg-gray-900 p-4 rounded-xl shadow-md border border-gray-700 flex items-center space-x-4">
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-20 h-20 object-cover rounded-lg shadow-sm"
+                    onError={(e) => { e.target.onerror = null; e.target.src = `https://placehold.co/80x80/333333/FFFFFF?text=${product.id}`; }}
+                  />
+                  <div className="flex-grow">
+                    <h4 className="text-xl font-semibold text-red-300">{product.name}</h4>
+                    <p className="text-gray-400">¥{product.price} | {product.category}</p>
+                  </div>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => setEditingProduct(product)}
+                      className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-300 shadow-md"
+                    >
+                      {translations[lang].editProduct}
+                    </button>
+                    <button
+                      onClick={() => handleDeleteProduct(product.id)}
+                      className="bg-red-700 hover:bg-red-600 text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-300 shadow-md"
+                    >
+                      {translations[lang].deleteProduct}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="mt-8 flex justify-center">
+            <button
+              onClick={onBackToShop}
+              className="bg-gray-700 hover:bg-gray-600 text-gray-300 text-xl font-semibold py-4 px-8 rounded-full shadow-md transform hover:scale-105 transition-all duration-300 flex items-center justify-center"
+            >
+              ⬅️ {translations[lang].backToShop}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
 
   return (
     <div className="font-sans antialiased">
@@ -685,7 +970,7 @@ function App() {
           onCategoryChange={setSelectedCategory}
           selectedCategory={selectedCategory}
           onViewIntro={() => setCurrentPage('intro')}
-          onShowFirebaseConfig={() => setShowFirebaseConfigModal(true)} // 新增按鈕觸發顯示 Firebase 設定彈窗
+          onNavigateToAdmin={() => setCurrentPage('admin')} // 新增導航到管理後台
         />
       )}
       {currentPage === 'checkout' && (
@@ -694,6 +979,15 @@ function App() {
           onBackToShop={() => setCurrentPage('shop')}
           lang={currentLanguage}
           translations={translations}
+        />
+      )}
+      {currentPage === 'admin' && (
+        <AdminPage
+          products={productsData} // 傳遞從 Firestore 獲取的商品數據
+          lang={currentLanguage}
+          translations={translations}
+          onBackToShop={() => setCurrentPage('shop')}
+          isFirebaseReady={isFirebaseReady}
         />
       )}
 
@@ -726,3 +1020,4 @@ function App() {
 
 // Render the App component into the root div
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
