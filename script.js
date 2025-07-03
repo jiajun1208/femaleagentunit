@@ -334,7 +334,9 @@ function App() {
   const [isFirebaseReady, setIsFirebaseReady] = useState(false); // Firebase 是否初始化完成
   const [selectedProductId, setSelectedProductId] = useState(null); // 儲存選定商品的ID
 
-  // 硬編碼的 Firebase 配置 (請替換為您自己的專案詳細資訊)
+  // 硬編碼的 Firebase 配置 (請務必替換為您自己的專案詳細資訊)
+  // 您可以在 Firebase 控制台 (console.firebase.google.com) > 專案設定 (Project settings) > 您的應用程式 (Your apps) 中找到這些資訊。
+  // 請確保將 'YOUR_API_KEY' 等佔位符替換為實際的值，並保留引號。
   const firebaseConfigHardcoded = {
       apiKey: "AIzaSyCZSC4KP9r9Ia74gjhVM4hkhkCiXU6ltR4",
       authDomain: "avny-ccbe9.firebaseapp.com",
@@ -344,7 +346,7 @@ function App() {
       messagingSenderId: "686829295344",
       appId: "1:686829295344:web:f0928898f8af0ab3701435",
       measurementId: "G-QQYT04PKLL"
-  } ;
+  };
 
   // 載入 Firebase 配置並初始化 Firebase
   useEffect(() => {
@@ -1241,3 +1243,4 @@ function App() {
 
 // Render the App component into the root div
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
