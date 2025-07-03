@@ -18,7 +18,10 @@
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     
-    <!-- Lucide Icons CDN - Load AFTER React -->
+    <!-- Babel Standalone for JSX transformation - Load AFTER React, BEFORE your script -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Lucide Icons CDN - Load AFTER React, BEFORE your script if it uses these globally -->
     <script src="https://unpkg.com/lucide-react@latest/dist/umd/lucide-react.js"></script>
     
     <!-- Firebase SDKs (IMPORTANT: Uncomment these lines if you plan to use Firebase) -->
@@ -45,7 +48,7 @@
 <body class="bg-black font-sans antialiased">
     <div id="root"></div>
 
-    <!-- Your React App JavaScript - Load LAST and as a regular script -->
-    <script src="script.js"></script>
+    <!-- Your React App JavaScript - Load LAST and specify type="text/babel" for JSX -->
+    <script type="text/babel" src="script.js"></script>
 </body>
 </html>
