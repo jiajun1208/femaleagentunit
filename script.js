@@ -1,7 +1,10 @@
-// Import React and ReactDOM directly as modules from CDN
-// This is often more robust when main.js is a type="module" script
-import React, { useState, useEffect } from 'https://unpkg.com/react@18/index.js';
-import ReactDOM from 'https://unpkg.com/react-dom@18/index.js';
+// Explicitly get React and ReactDOM from the global window object
+// This is crucial for compatibility with UMD bundles like lucide-react
+const React = window.React;
+const ReactDOM = window.ReactDOM;
+
+// Now destructure from the React object
+const { useState, useEffect } = React;
 
 // Lucide Icons are globally available via UMD build linked in index.html
 // Access them directly from the global 'lucideReact' object
@@ -724,5 +727,3 @@ function App() {
 
 // Render the App component into the root div
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
-
-
