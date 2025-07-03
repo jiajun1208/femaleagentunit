@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FAU SHOPPING</title>
+    <!-- Favicon (to prevent 404 error in console) -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='50%25' y='50%25' font-size='80' text-anchor='middle' dominant-baseline='central'%3E🛒%3C/text%3E%3C/svg%3E" type="image/svg+xml">
+
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Inter Font (Tailwind default) -->
@@ -19,9 +22,10 @@
     
     <script type="module">
         // Import Firebase modules from CDN
+        // Corrected: Removed duplicate 'addDoc' from the import list
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Make Firebase modules globally available for main.js
         // This ensures that `window.firebase` is available after these modules load.
@@ -32,7 +36,7 @@
             signInWithCustomToken: signInWithCustomToken,
             onAuthStateChanged: onAuthStateChanged,
             getFirestore: getFirestore,
-            doc: doc, getDoc: getDoc, addDoc: addDoc, setDoc: setDoc, updateDoc: updateDoc, deleteDoc: deleteDoc, onSnapshot: onSnapshot, collection: collection, query: query, where: where, addDoc: addDoc, getDocs: getDocs
+            doc: doc, getDoc: getDoc, addDoc: addDoc, setDoc: setDoc, updateDoc: updateDoc, deleteDoc: deleteDoc, onSnapshot: onSnapshot, collection: collection, query: query, where: where, getDocs: getDocs
         };
     </script>
     
@@ -41,8 +45,6 @@
     <div id="root"></div>
 
     <!-- Your React App JavaScript -->
-    <!-- Using type="text/babel" for direct JSX in browser is an alternative, but requires babel-standalone.
-         For now, we'll stick to type="module" and adjust imports in main.js. -->
     <script type="module" src="main.js"></script>
 </body>
 </html>
