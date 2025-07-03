@@ -13,13 +13,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="style.css">
-    <!-- React CDN -->
+
+    <!-- React CDN - Load FIRST -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <!-- Lucide Icons CDN (for React components) -->
-    <script src="https://unpkg.com/lucide-react@latest/dist/umd/lucide-react.js"></script>
-    <!-- Firebase SDKs (IMPORTANT: Uncomment these lines if you plan to use Firebase) -->
     
+    <!-- Lucide Icons CDN - Load AFTER React -->
+    <script src="https://unpkg.com/lucide-react@latest/dist/umd/lucide-react.js"></script>
+    
+    <!-- Firebase SDKs (IMPORTANT: Uncomment these lines if you plan to use Firebase) -->
     <script type="module">
         // Import Firebase modules from CDN
         // Corrected: Ensure 'addDoc' is not duplicated in the import list
@@ -27,8 +29,7 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Make Firebase modules globally available for main.js
-        // This ensures that `window.firebase` is available after these modules load.
+        // Make Firebase modules globally available for your main application script
         window.firebase = {
             initializeApp: initializeApp,
             getAuth: getAuth,
@@ -44,8 +45,7 @@
 <body class="bg-black font-sans antialiased">
     <div id="root"></div>
 
-    <!-- Your React App JavaScript -->
-    <!-- Changed type to "text/javascript" or removed, to ensure it runs after all CDN scripts -->
-    <script src="main.js"></script>
+    <!-- Your React App JavaScript - Load LAST and as a regular script -->
+    <script src="script.js"></script>
 </body>
 </html>
