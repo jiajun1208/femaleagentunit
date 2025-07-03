@@ -1,7 +1,80 @@
 import React, { useState, useEffect } from 'https://unpkg.com/react@18/index.js';
 import ReactDOM from 'https://unpkg.com/react-dom@18/index.js';
 // Lucide Icons are globally available via UMD build linked in index.html
-const { ShoppingCart, ChevronRight, User, Building, X, Info, ArrowLeft } = lucideReact;
+const { ShoppingCart, ChevronRight, User, Building, X, Info, ArrowLeft, Settings } = lucideReact; // 引入 Settings 圖示
+
+// 全局 Firebase 實例 (如果成功初始化)
+let firebaseApp = null;
+let db = null;
+let auth = null;
+
+// Firebase 配置彈窗組件
+const FirebaseConfigModal = ({ onClose, onSave, initialConfig, lang, translations }) => {
+  const [config, setConfig] = useState(initialConfig || {
+    apiKey: "AIzaSyCZSC4KP9r9Ia74gjhVM4hkhkCiXU6ltR4",
+    authDomain: "avny-ccbe9.firebaseapp.com",
+    databaseURL: "https://avny-ccbe9-default-rtdb.firebaseio.com",
+    projectId: "avny-ccbe9",
+    storageBucket: "avny-ccbe9.firebasestorage.app",
+    messagingSenderId: "686829295344",
+    appId: "1:686829295344:web:f0412dc3afa84c04701435",
+    measurementId: "G-1GT5Y7YYDD"
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setConfig(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSave = () => {
+    onSave(config);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-800 text-white rounded-lg shadow-xl p-6 w-full max-w-md relative">
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 text-gray-400 hover:text-white transition-colors duration-300 rounded-full p-2 bg-gray-700 hover:bg-gray-600"
+          aria-label={translations[lang].close}
+        >
+          <X size={24} />
+        </button>
+        <h2 className="text-3xl font-bold mb-6 text-purple-400 border-b border-purple-700 pb-3">
+          Firebase 設定
+        </h2>
+        <div className="space-y-4">
+          {Object.keys(config).map(key => (
+            <div key={key}>
+              <label htmlFor={key} className="block text-gray-300 text-sm font-semibold mb-1">
+                {key.charAt(0).toUpperCase() + key.slice(1)}:
+              </label>
+              <input
+                type="text"
+                id={key}
+                name={key}
+                value={config[key]}
+                onChange={handleChange}
+                className="w-full p-3 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
+                placeholder={`輸入您的 ${key}`}
+              />
+            </div>
+          ))}
+        </div>
+        <div className="mt-8 flex justify-end space-x-4">
+          <button
+            onClick={handleSave}
+            className="bg-red-600 hover:bg-red-500 text-white px-6 py-3 rounded-full font-semibold transition-colors duration-300 shadow-lg transform hover:scale-105"
+          >
+            儲存設定
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 
 // 應用程式的主要組件
 function App() {
@@ -43,6 +116,7 @@ function App() {
       backToShop: 'ショップに戻る',
       placeOrder: '注文を確定する',
       orderSuccess: 'ご注文ありがとうございます！',
+      firebaseSettings: 'Firebase 設定', // 新增 Firebase 設定翻譯
     },
     en: {
       appName: 'FAU SHOPPING',
@@ -80,6 +154,7 @@ function App() {
       backToShop: 'Back to Shop',
       placeOrder: 'Place Order',
       orderSuccess: 'Thank you for your order!',
+      firebaseSettings: 'Firebase Settings', // 新增 Firebase 設定翻譯
     },
     'zh-tw': {
       appName: 'FAU SHOPPING',
@@ -117,6 +192,7 @@ function App() {
       backToShop: '返回商店',
       placeOrder: '確認下單',
       orderSuccess: '感謝您的訂單！',
+      firebaseSettings: 'Firebase 設定', // 新增 Firebase 設定翻譯
     },
     'zh-cn': {
       appName: 'FAU SHOPPING',
@@ -205,6 +281,35 @@ function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('all'); // 預設顯示所有商品
   const [orderPlacedMessage, setOrderPlacedMessage] = useState(''); // 訂單成功訊息
+  const [showFirebaseConfigModal, setShowFirebaseConfigModal] = useState(false); // 控制 Firebase 設定彈窗顯示
+  const [firebaseConfig, setFirebaseConfig] = useState(null); // 儲存 Firebase 配置
+
+  // 載入 Firebase 配置並初始化 Firebase
+  useEffect(() => {
+    const storedConfig = localStorage.getItem('firebaseConfig');
+    if (storedConfig) {
+      try {
+        const parsedConfig = JSON.parse(storedConfig);
+        setFirebaseConfig(parsedConfig);
+        // 嘗試初始化 Firebase
+        if (window.firebase && !firebaseApp) { // 檢查 window.firebase 是否可用且尚未初始化
+          firebaseApp = window.firebase.initializeApp(parsedConfig);
+          db = window.firebase.getFirestore(firebaseApp);
+          auth = window.firebase.getAuth(firebaseApp);
+          console.log("Firebase initialized from stored config.");
+          // 可以選擇在此處進行匿名登入或其他認證
+          // window.firebase.signInAnonymously(auth).then(userCredential => {
+          //   console.log("Signed in anonymously:", userCredential.user.uid);
+          // }).catch(error => {
+          //   console.error("Anonymous sign-in failed:", error);
+          // });
+        }
+      } catch (e) {
+        console.error("Failed to parse Firebase config from localStorage:", e);
+        localStorage.removeItem('firebaseConfig'); // 清除無效配置
+      }
+    }
+  }, []); // 只在組件掛載時運行一次
 
   // 語言切換邏輯
   const handleLanguageChange = () => {
@@ -237,6 +342,33 @@ function App() {
   const filteredProducts = selectedCategory === 'all'
     ? products
     : products.filter(product => product.category === selectedCategory);
+
+  // 處理 Firebase 配置儲存
+  const handleSaveFirebaseConfig = (config) => {
+    localStorage.setItem('firebaseConfig', JSON.stringify(config));
+    setFirebaseConfig(config);
+    // 重新初始化 Firebase (如果已經載入 SDK)
+    if (window.firebase) {
+      // 避免重複初始化，如果已經有 app 實例則不再初始化
+      if (firebaseApp) {
+        // 如果需要更新配置，可能需要先刪除舊的 app 實例
+        // window.firebase.deleteApp(firebaseApp).then(() => {
+        //   firebaseApp = window.firebase.initializeApp(config);
+        //   db = window.firebase.getFirestore(firebaseApp);
+        //   auth = window.firebase.getAuth(firebaseApp);
+        //   console.log("Firebase re-initialized with new config.");
+        // });
+        console.warn("Firebase app already initialized. Restart the page to apply new config if significant changes were made.");
+      } else {
+        firebaseApp = window.firebase.initializeApp(config);
+        db = window.firebase.getFirestore(firebaseApp);
+        auth = window.firebase.getAuth(firebaseApp);
+        console.log("Firebase initialized with new config.");
+      }
+    } else {
+      console.warn("Firebase SDK not loaded. Please uncomment Firebase scripts in index.html.");
+    }
+  };
 
   // 購物車彈窗組件
   const CartModal = ({ cartItems, onClose, onRemoveFromCart, onCheckout, lang, translations }) => {
@@ -364,7 +496,7 @@ function App() {
   );
 
   // 購物頁面組件
-  const ShopPage = ({ products, onAddToCart, cartCount, onViewCart, lang, translations, onCategoryChange, selectedCategory, onViewIntro }) => (
+  const ShopPage = ({ products, onAddToCart, cartCount, onViewCart, lang, translations, onCategoryChange, selectedCategory, onViewIntro, onShowFirebaseConfig }) => (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-purple-900 text-white flex flex-col">
       {/* 頂部導航欄 */}
       <header className="w-full bg-gray-900 p-4 shadow-xl flex items-center justify-center relative">
@@ -375,6 +507,15 @@ function App() {
 
         {/* 右側按鈕組 */}
         <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center space-x-4">
+          {/* Firebase 設定按鈕 */}
+          <button
+            onClick={onShowFirebaseConfig}
+            className="bg-purple-700 hover:bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-300 shadow-md flex items-center space-x-2"
+          >
+            <Settings size={18} />
+            <span>{translations[lang].firebaseSettings}</span>
+          </button>
+
           {/* 簡介按鈕 */}
           <button
             onClick={onViewIntro}
@@ -444,7 +585,7 @@ function App() {
   );
 
   // 結帳頁面組件
-  const CheckoutPage = ({ cartItems, onBackToShop, lang, translations, onPlaceOrder }) => {
+  const CheckoutPage = ({ cartItems, onBackToShop, lang, translations }) => {
     const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
     // 訂單成功訊息的顯示邏輯
@@ -535,13 +676,13 @@ function App() {
           onCategoryChange={setSelectedCategory}
           selectedCategory={selectedCategory}
           onViewIntro={() => setCurrentPage('intro')}
+          onShowFirebaseConfig={() => setShowFirebaseConfigModal(true)} // 新增按鈕觸發顯示 Firebase 設定彈窗
         />
       )}
       {currentPage === 'checkout' && (
         <CheckoutPage
           cartItems={cart}
           onBackToShop={() => setCurrentPage('shop')}
-          onPlaceOrder={() => { /* Logic moved to handlePlaceOrder within CheckoutPage */ }}
           lang={currentLanguage}
           translations={translations}
         />
@@ -560,9 +701,20 @@ function App() {
           translations={translations}
         />
       )}
+
+      {showFirebaseConfigModal && (
+        <FirebaseConfigModal
+          onClose={() => setShowFirebaseConfigModal(false)}
+          onSave={handleSaveFirebaseConfig}
+          initialConfig={firebaseConfig}
+          lang={currentLanguage}
+          translations={translations}
+        />
+      )}
     </div>
   );
 }
 
 // Render the App component into the root div
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
