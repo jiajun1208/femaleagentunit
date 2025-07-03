@@ -22,7 +22,7 @@
     
     <script type="module">
         // Import Firebase modules from CDN
-        // Corrected: Removed duplicate 'addDoc' from the import list
+        // Corrected: Ensure 'addDoc' is not duplicated in the import list
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
@@ -45,6 +45,7 @@
     <div id="root"></div>
 
     <!-- Your React App JavaScript -->
-    <script type="module" src="main.js"></script>
+    <!-- Changed type to "text/javascript" or removed, to ensure it runs after all CDN scripts -->
+    <script src="main.js"></script>
 </body>
 </html>
