@@ -10,17 +10,47 @@ let firebaseApp = null;
 let db = null;
 let auth = null;
 
+// Gemini API 翻譯函數
+async function translateText(text, targetLang, sourceLang = 'auto') {
+  if (!text) return text; // 如果沒有文字，直接返回
+  try {
+    const chatHistory = [{ role: "user", parts: [{ text: `Translate "${text}" from ${sourceLang} to ${targetLang}. Only return the translated text.` }] }];
+    const payload = { contents: chatHistory };
+    const apiKey = ""; // Canvas 將在運行時提供此金鑰
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const result = await response.json();
+    if (result.candidates && result.candidates.length > 0 &&
+      result.candidates[0].content && result.candidates[0].content.parts &&
+      result.candidates[0].content.parts.length > 0) {
+      const translatedText = result.candidates[0].content.parts[0].text;
+      console.log(`Translated "${text}" to "${translatedText}" (${targetLang})`);
+      return translatedText;
+    } else {
+      console.error("Translation API returned unexpected structure or no content:", result);
+      return text; // 錯誤時返回原始文字
+    }
+  } catch (error) {
+    console.error("Error during translation API call:", error);
+    return text; // 錯誤時返回原始文字
+  }
+}
+
+
 // Firebase 配置彈窗組件 (此組件仍存在，但不再從 AdminPage 觸發)
 const FirebaseConfigModal = ({ onClose, onSave, initialConfig, lang, translations }) => {
   const [config, setConfig] = useState(initialConfig || {
-     apiKey: "AIzaSyCZSC4KP9r9Ia74gjhVM4hkhkCiXU6ltR4",
-     authDomain: "avny-ccbe9.firebaseapp.com",
-     databaseURL: "https://avny-ccbe9-default-rtdb.firebaseio.com",
-     projectId: "avny-ccbe9",
-     storageBucket: "avny-ccbe9.firebasestorage.app",
-     messagingSenderId: "686829295344",
-     appId: "1:686829295344:web:f0928898f8af0ab3701435",
-     measurementId: "G-QQYT04PKLL"
+    apiKey: '',
+    authDomain: '',
+    projectId: '',
+    storageBucket: '',
+    messagingSenderId: '',
+    appId: '',
+    measurementId: '' // Optional
   });
 
   const handleChange = (e) => {
@@ -110,37 +140,37 @@ function App() {
       },
       productDescription: '高品質な素材で作られた、モダンでスタイリッシュな製品。',
       allCategories: '全商品',
-      categoryHypnosis: '催眠類',
-      categoryPossession: '附身類',
-      categoryTSF: 'TSF類',
-      categoryAgentGear: '特工用品',
+      categoryHypnosis: '催眠用', // 更新為「催眠用」
+      categoryPossession: '憑依用', // 更新為「憑依用」
+      categoryTSF: 'TSF用', // 更新為「TSF用」
+      categoryAgentGear: '武装用', // 更新為「武装用」
       aboutUs: '会社情報',
       backToShop: 'ショップに戻る',
       placeOrder: '注文を確定する',
       orderSuccess: 'ご注文ありがとうございます！',
-      firebaseSettings: 'Firebase 設定', // 新增 Firebase 設定翻譯
-      adminPanel: '管理後台', // 新增管理後台翻譯
+      firebaseSettings: 'Firebase 設定',
+      adminPanel: '管理後台',
       addProduct: '新增商品',
       editProduct: '編輯商品',
-      deleteProduct: '刪除商品',
-      productName: '商品名稱',
-      productPrice: '商品價格',
-      productImage: '商品圖片URL',
-      productCategory: '商品類別',
-      save: '儲存',
-      cancel: '取消',
-      confirmDelete: '確定要刪除此商品嗎？',
-      productAdded: '商品已新增！',
-      productUpdated: '商品已更新！',
-      productDeleted: '商品已刪除！',
-      fetchingProducts: '正在載入商品...',
-      noProducts: '目前沒有商品。',
-      productShortDescription: '商品簡介', // 新增翻譯
-      productDetailedDescription: '商品詳細介紹', // 新增翻譯
-      backToProducts: '返回商品列表', // 新增翻譯
-      enterPassword: '請輸入密碼', // 新增翻譯
-      passwordIncorrect: '密碼錯誤，請重新輸入。', // 新增翻譯
-      submit: '提交', // 新增翻譯
+      deleteProduct: '削除商品',
+      productName: '商品名称',
+      productPrice: '商品価格',
+      productImage: '商品画像URL',
+      productCategory: '商品カテゴリ',
+      save: '保存',
+      cancel: 'キャンセル',
+      confirmDelete: 'この商品を削除してもよろしいですか？',
+      productAdded: '商品が追加されました！',
+      productUpdated: '商品が更新されました！',
+      productDeleted: '商品が削除されました！',
+      fetchingProducts: '商品を読み込み中...',
+      noProducts: '現在、商品はございません。',
+      productShortDescription: '商品概要',
+      productDetailedDescription: '商品詳細',
+      backToProducts: '商品リストに戻る',
+      enterPassword: 'パスワードを入力してください',
+      passwordIncorrect: 'パスワードが間違っています。もう一度入力してください。',
+      submit: '送信',
     },
     en: {
       appName: 'FAU SHOPPING',
@@ -170,16 +200,16 @@ function App() {
       },
       productDescription: 'A modern and stylish product made with high-quality materials.',
       allCategories: 'All Categories',
-      categoryHypnosis: 'Hypnosis',
-      categoryPossession: 'Possession',
-      categoryTSF: 'TSF',
-      categoryAgentGear: 'Agent Gear',
+      categoryHypnosis: 'For Hypnosis', // 更新翻譯
+      categoryPossession: 'For Possession', // 更新翻譯
+      categoryTSF: 'For TSF', // 更新翻譯
+      categoryAgentGear: 'For Agent Gear', // 更新翻譯
       aboutUs: 'About Us',
       backToShop: 'Back to Shop',
       placeOrder: 'Place Order',
       orderSuccess: 'Thank you for your order!',
-      firebaseSettings: 'Firebase Settings', // 新增 Firebase 設定翻譯
-      adminPanel: 'Admin Panel', // 新增管理後台翻譯
+      firebaseSettings: 'Firebase Settings',
+      adminPanel: 'Admin Panel',
       addProduct: 'Add Product',
       editProduct: 'Edit Product',
       deleteProduct: 'Delete Product',
@@ -195,12 +225,12 @@ function App() {
       productDeleted: 'Product deleted successfully!',
       fetchingProducts: 'Fetching products...',
       noProducts: 'No products available.',
-      productShortDescription: 'Short Description', // 新增翻譯
-      productDetailedDescription: 'Detailed Description', // 新增翻譯
-      backToProducts: 'Back to Products', // 新增翻譯
-      enterPassword: 'Please enter password', // 新增翻譯
-      passwordIncorrect: 'Incorrect password, please try again.', // 新增翻譯
-      submit: 'Submit', // 新增翻譯
+      productShortDescription: 'Short Description',
+      productDetailedDescription: 'Detailed Description',
+      backToProducts: 'Back to Products',
+      enterPassword: 'Please enter password',
+      passwordIncorrect: 'Incorrect password, please try again.',
+      submit: 'Submit',
     },
     'zh-tw': {
       appName: 'FAU SHOPPING',
@@ -230,16 +260,16 @@ function App() {
       },
       productDescription: '一款採用高品質材料製成的現代時尚產品。',
       allCategories: '所有分類',
-      categoryHypnosis: '催眠類',
-      categoryPossession: '附身類',
-      categoryTSF: 'TSF類',
-      categoryAgentGear: '特工用品',
+      categoryHypnosis: '催眠用', // 更新翻譯
+      categoryPossession: '憑依用', // 更新翻譯
+      categoryTSF: 'TSF用', // 更新翻譯
+      categoryAgentGear: '武裝用', // 更新翻譯
       aboutUs: '關於我們',
       backToShop: '返回商店',
       placeOrder: '確認下單',
       orderSuccess: '感謝您的訂單！',
-      firebaseSettings: 'Firebase 設定', // 新增 Firebase 設定翻譯
-      adminPanel: '管理後台', // 新增管理後台翻譯
+      firebaseSettings: 'Firebase 設定',
+      adminPanel: '管理後台',
       addProduct: '新增商品',
       editProduct: '編輯商品',
       deleteProduct: '刪除商品',
@@ -255,12 +285,12 @@ function App() {
       productDeleted: '商品已刪除！',
       fetchingProducts: '正在載入商品...',
       noProducts: '目前沒有商品。',
-      productShortDescription: '商品簡介', // 新增翻譯
-      productDetailedDescription: '商品詳細介紹', // 新增翻譯
-      backToProducts: '返回商品列表', // 新增翻譯
-      enterPassword: '請輸入密碼', // 新增翻譯
-      passwordIncorrect: '密碼錯誤，請重新輸入。', // 新增翻譯
-      submit: '提交', // 新增翻譯
+      productShortDescription: '商品簡介',
+      productDetailedDescription: '商品詳細介紹',
+      backToProducts: '返回商品列表',
+      enterPassword: '請輸入密碼',
+      passwordIncorrect: '密碼錯誤，請重新輸入。',
+      submit: '提交',
     },
     'zh-cn': {
       appName: 'FAU SHOPPING',
@@ -290,10 +320,10 @@ function App() {
       },
       productDescription: '一款采用高质量材料制成的现代时尚产品。',
       allCategories: '所有分类',
-      categoryHypnosis: '催眠类',
-      categoryPossession: '附身类',
-      categoryTSF: 'TSF类',
-      categoryAgentGear: '特工用品',
+      categoryHypnosis: '催眠用', // 更新翻譯
+      categoryPossession: '凭依用', // 更新翻譯
+      categoryTSF: 'TSF用', // 更新翻譯
+      categoryAgentGear: '武装用', // 更新翻譯
     },
     ko: {
       appName: 'FAU SHOPPING',
@@ -304,7 +334,7 @@ function App() {
       ceoBio: '쿠로카와 그룹의 회장인 쿠로카와 치에는 혁신적인 리더십과 탁월한 비전으로 유명합니다. 그의 지도 아래 회사는 기술과 고객 만족도에서 새로운 기준을 세웠습니다.',
       companyCompany: '쿠로카와 그룹은 고품질 제품과 우수한 고객 서비스를 제공하는 데 전념하는 최첨단 기업입니다。私たちは革新を推進し、お客様の生活を豊かにすることを目指しています。',
       enterShop: '쇼핑 시작',
-      productsTitle: '製品',
+      productsTitle: '제품',
       addToCart: '장바구니에 추가',
       viewCart: '장바구니 보기',
       cartTitle: '장바구니',
@@ -323,10 +353,10 @@ function App() {
       },
       productDescription: '고품질 소재로 제작된 현대적이고 세련된 제품입니다。',
       allCategories: '모든 카테고리',
-      categoryHypnosis: '최면',
-      categoryPossession: '빙의',
-      categoryTSF: 'TSF',
-      categoryAgentGear: '요원 장비',
+      categoryHypnosis: '최면용', // 更新翻譯
+      categoryPossession: '빙의용', // 更新翻譯
+      categoryTSF: 'TSF용', // 更新翻譯
+      categoryAgentGear: '무장용', // 更新翻譯
     },
   };
 
@@ -606,12 +636,12 @@ function App() {
                     <div className="flex items-center space-x-4">
                       <img
                         src={item.image}
-                        alt={item.name}
+                        alt={item.name[lang] || item.name.ja || item.name} // 顯示翻譯後的名稱
                         className="w-16 h-16 object-cover rounded-lg shadow-md"
                         onError={(e) => { e.target.onerror = null; e.target.src = `https://placehold.co/64x64/333333/FFFFFF?text=${item.id}`; }}
                       />
                       <div>
-                        <h3 className="text-lg font-semibold text-purple-300">{item.name}</h3>
+                        <h3 className="text-lg font-semibold text-purple-300">{item.name[lang] || item.name.ja || item.name}</h3> {/* 顯示翻譯後的名稱 */}
                         <p className="text-gray-400">{item.quantity} x ¥{item.price}</p>
                       </div>
                     </div>
@@ -649,14 +679,14 @@ function App() {
     >
       <img
         src={product.image}
-        alt={product.name}
+        alt={product.name[lang] || product.name.ja || product.name} // 顯示翻譯後的名稱
         className="w-full h-48 object-cover object-center rounded-t-xl"
         onError={(e) => { e.target.onerror = null; e.target.src = `https://placehold.co/400x300/333333/FFFFFF?text=${product.id}`; }}
       />
       <div className="p-5 flex flex-col flex-grow">
-        <h3 className="text-xl font-semibold text-purple-300 mb-2">{product.name}</h3>
+        <h3 className="text-xl font-semibold text-purple-300 mb-2">{product.name[lang] || product.name.ja || product.name}</h3> {/* 顯示翻譯後的名稱 */}
         {/* 顯示商品簡介 */}
-        <p className="text-gray-400 text-sm mb-3 flex-grow">{product.shortDescription || translations[lang].productDescription}</p>
+        <p className="text-gray-400 text-sm mb-3 flex-grow">{product.shortDescription[lang] || product.shortDescription.ja || translations[lang].productDescription}</p> {/* 顯示翻譯後的簡介 */}
         <div className="flex justify-between items-center mt-auto gap-x-6"> {/* 增加價格與按鈕間距 */}
           <span className="text-2xl font-bold text-red-400">¥{product.price}</span>
           <button
@@ -774,10 +804,11 @@ function App() {
               className="bg-gray-700 text-white rounded-full px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-md"
             >
               <option value="all">{translations[lang].allCategories}</option>
+              {/* 使用翻譯後的分類名稱顯示，但值仍為原始日文，方便過濾 */}
               <option value="催眠類">{translations[lang].categoryHypnosis}</option>
-              <option value="附身類">{translations[lang].categoryPossession}</option>
-              <option value="TSF類">{translations[lang].categoryTSF}</option>
-              <option value="特工用品">{translations[lang].categoryAgentGear}</option>
+              <option value="憑依用">{translations[lang].categoryPossession}</option>
+              <option value="TSF用">{translations[lang].categoryTSF}</option>
+              <option value="武装用">{translations[lang].categoryAgentGear}</option>
             </select>
           </div>
         </div>
@@ -828,12 +859,12 @@ function App() {
                   <div className="flex items-center space-x-4">
                     <img
                       src={item.image}
-                      alt={item.name}
+                      alt={item.name[lang] || item.name.ja || item.name} // 顯示翻譯後的名稱
                       className="w-20 h-20 object-cover rounded-lg shadow-md"
                       onError={(e) => { e.target.onerror = null; e.target.src = `https://placehold.co/80x80/333333/FFFFFF?text=${item.id}`; }}
                     />
                     <div>
-                      <h3 className="text-xl font-semibold text-purple-300">{item.name}</h3>
+                      <h3 className="text-xl font-semibold text-purple-300">{item.name[lang] || item.name.ja || item.name}</h3> {/* 顯示翻譯後的名稱 */}
                       <p className="text-gray-400">{item.quantity} x ¥{item.price}</p>
                     </div>
                   </div>
@@ -893,6 +924,16 @@ function App() {
       );
     }
 
+    // 映射 Firestore 儲存的分類值到翻譯鍵
+    const categoryTranslationMap = {
+      '催眠類': translations[lang].categoryHypnosis,
+      '憑依用': translations[lang].categoryPossession,
+      'TSF用': translations[lang].categoryTSF,
+      '武装用': translations[lang].categoryAgentGear,
+    };
+    const displayCategory = categoryTranslationMap[product.category] || product.category;
+
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-purple-900 text-white flex flex-col items-center p-4">
         <div className="bg-gray-800 bg-opacity-90 rounded-2xl shadow-2xl p-8 md:p-12 max-w-4xl w-full border border-purple-700">
@@ -907,16 +948,16 @@ function App() {
             <div className="w-full md:w-1/2 flex-shrink-0">
               <img
                 src={product.image}
-                alt={product.name}
+                alt={product.name[lang] || product.name.ja || product.name} // 顯示翻譯後的名稱
                 className="w-full h-auto object-cover rounded-xl shadow-lg"
                 onError={(e) => { e.target.onerror = null; e.target.src = `https://placehold.co/600x400/333333/FFFFFF?text=${product.id}`; }}
               />
             </div>
             <div className="w-full md:w-1/2">
-              <h1 className="text-4xl font-extrabold text-red-400 mb-4">{product.name}</h1>
+              <h1 className="text-4xl font-extrabold text-red-400 mb-4">{product.name[lang] || product.name.ja || product.name}</h1> {/* 顯示翻譯後的名稱 */}
               <p className="text-purple-300 text-2xl font-bold mb-4">¥{product.price}</p>
-              <p className="text-gray-300 text-lg mb-6">{product.detailedDescription || translations[lang].productDescription}</p>
-              <p className="text-gray-400 text-md mb-8">分類: {product.category}</p>
+              <p className="text-gray-300 text-lg mb-6">{product.detailedDescription[lang] || product.detailedDescription.ja || translations[lang].productDescription}</p> {/* 顯示翻譯後的詳細介紹 */}
+              <p className="text-gray-400 text-md mb-8">分類: {displayCategory}</p> {/* 顯示翻譯後的分類 */}
               <button
                 onClick={() => onAddToCart(product)}
                 className="w-full bg-red-600 hover:bg-red-500 text-white text-xl font-bold py-3 px-6 rounded-full shadow-lg transform hover:scale-105 transition-all duration-300"
@@ -932,33 +973,35 @@ function App() {
 
 
   // 管理後台頁面組件
-  const AdminPage = ({ products, lang, translations, onBackToShop, isFirebaseReady }) => { // 移除 onShowFirebaseConfig
+  const AdminPage = ({ products, lang, translations, onBackToShop, isFirebaseReady, currentLanguage }) => { // 傳遞 currentLanguage
     const [editingProduct, setEditingProduct] = useState(null); // null for add, product object for edit
     const [name, setName] = useState('');
     const [price, setPrice] = useState('');
     const [image, setImage] = useState('');
-    const [category, setCategory] = useState('催眠類'); // Default category
+    const [category, setCategory] = useState('催眠類'); // Default category (original value)
     const [shortDescription, setShortDescription] = useState(''); // 新增簡介狀態
     const [detailedDescription, setDetailedDescription] = useState(''); // 新增詳細介紹狀態
     const [message, setMessage] = useState(''); // Feedback message
+    const [isTranslating, setIsTranslating] = useState(false); // 新增翻譯狀態
 
     useEffect(() => {
       if (editingProduct) {
-        setName(editingProduct.name);
+        // 編輯時，載入當前語言的內容，如果沒有則載入日文或原始值
+        setName(editingProduct.name[lang] || editingProduct.name.ja || editingProduct.name || '');
         setPrice(editingProduct.price);
         setImage(editingProduct.image);
-        setCategory(editingProduct.category);
-        setShortDescription(editingProduct.shortDescription || ''); // 載入簡介
-        setDetailedDescription(editingProduct.detailedDescription || ''); // 載入詳細介紹
+        setCategory(editingProduct.category); // 儲存原始分類值
+        setShortDescription(editingProduct.shortDescription[lang] || editingProduct.shortDescription.ja || editingProduct.shortDescription || '');
+        setDetailedDescription(editingProduct.detailedDescription[lang] || editingProduct.detailedDescription.ja || editingProduct.detailedDescription || '');
       } else {
         setName('');
         setPrice('');
         setImage('');
-        setCategory('催眠類');
+        setCategory('催眠類'); // 預設分類為原始日文值
         setShortDescription('');
         setDetailedDescription('');
       }
-    }, [editingProduct]);
+    }, [editingProduct, lang]); // 依賴於 editingProduct 和 lang
 
     const showMessage = (msg) => {
       setMessage(msg);
@@ -973,16 +1016,29 @@ function App() {
         return;
       }
 
+      setIsTranslating(true); // 開始翻譯，顯示載入狀態
+      showMessage("正在翻譯商品資訊...");
+
       const productData = {
-        name,
         price: parseFloat(price),
         image,
-        category,
-        shortDescription, // 儲存簡介
-        detailedDescription // 儲存詳細介紹
+        category, // 儲存原始分類值
+        name: {}, // 將儲存所有語言的翻譯
+        shortDescription: {}, // 將儲存所有語言的翻譯
+        detailedDescription: {} // 將儲存所有語言的翻譯
       };
 
+      const sourceLang = currentLanguage; // 以當前 UI 語言作為源語言
+      const targetLanguages = ['ja', 'en', 'zh-tw', 'zh-cn', 'ko']; // 所有支援的語言
+
       try {
+        // 遍歷所有目標語言並進行翻譯
+        for (const langCode of targetLanguages) {
+          productData.name[langCode] = await translateText(name, langCode, sourceLang);
+          productData.shortDescription[langCode] = await translateText(shortDescription, langCode, sourceLang);
+          productData.detailedDescription[langCode] = await translateText(detailedDescription, langCode, sourceLang);
+        }
+
         // 確保 __app_id 變數存在
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
@@ -1003,12 +1059,14 @@ function App() {
         setName('');
         setPrice('');
         setImage('');
-        setCategory('催眠類');
+        setCategory('催眠類'); // 重置為原始日文值
         setShortDescription('');
         setDetailedDescription('');
       } catch (error) {
         console.error("AdminPage: Error adding/updating product:", error);
         showMessage("操作失敗：" + error.message);
+      } finally {
+        setIsTranslating(false); // 翻譯結束
       }
     };
 
@@ -1045,6 +1103,14 @@ function App() {
       );
     }
 
+    // 映射 Firestore 儲存的分類值到翻譯鍵
+    const categoryOptionsMap = {
+      '催眠類': translations[lang].categoryHypnosis,
+      '憑依用': translations[lang].categoryPossession,
+      'TSF用': translations[lang].categoryTSF,
+      '武装用': translations[lang].categoryAgentGear,
+    };
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-purple-900 text-white flex flex-col items-center p-4">
         <div className="bg-gray-800 bg-opacity-90 rounded-2xl shadow-2xl p-8 md:p-12 max-w-5xl w-full border border-purple-700">
@@ -1052,19 +1118,15 @@ function App() {
             {translations[lang].adminPanel}
           </h2>
 
-          {/* Firebase 設定按鈕已移除 */}
-          {/* <div className="flex justify-end mb-4">
-            <button
-                onClick={onShowFirebaseConfig} // 此行已移除
-                className="bg-purple-700 hover:bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-300 shadow-md flex items-center space-x-2"
-            >
-                ⚙️ <span>{translations[lang].firebaseSettings}</span>
-            </button>
-          </div> */}
-
           {message && (
             <div className="bg-green-700 text-white text-center py-3 px-6 rounded-lg mb-6 text-lg font-semibold shadow-lg animate-fade-in">
               {message}
+            </div>
+          )}
+
+          {isTranslating && (
+            <div className="bg-blue-700 text-white text-center py-3 px-6 rounded-lg mb-6 text-lg font-semibold shadow-lg animate-pulse">
+              正在翻譯商品資訊，請稍候...
             </div>
           )}
 
@@ -1126,10 +1188,11 @@ function App() {
                   className="w-full p-3 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
                   required
                 >
+                  {/* 選項的值為原始日文，顯示為翻譯後的文字 */}
                   <option value="催眠類">{translations[lang].categoryHypnosis}</option>
-                  <option value="附身類">{translations[lang].categoryPossession}</option>
-                  <option value="TSF類">{translations[lang].categoryTSF}</option>
-                  <option value="特工用品">{translations[lang].categoryAgentGear}</option>
+                  <option value="憑依用">{translations[lang].categoryPossession}</option>
+                  <option value="TSF用">{translations[lang].categoryTSF}</option>
+                  <option value="武装用">{translations[lang].categoryAgentGear}</option>
                 </select>
               </div>
               <div className="md:col-span-2">
@@ -1163,6 +1226,7 @@ function App() {
               <button
                 type="submit"
                 className="bg-red-600 hover:bg-red-500 text-white px-6 py-3 rounded-full font-semibold transition-colors duration-300 shadow-lg transform hover:scale-105"
+                disabled={isTranslating} // 翻譯中禁用按鈕
               >
                 {translations[lang].save}
               </button>
@@ -1171,6 +1235,7 @@ function App() {
                   type="button"
                   onClick={() => setEditingProduct(null)}
                   className="bg-gray-700 hover:bg-gray-600 text-gray-300 px-6 py-3 rounded-full font-semibold transition-colors duration-300 shadow-md"
+                  disabled={isTranslating} // 翻譯中禁用按鈕
                 >
                   {translations[lang].cancel}
                 </button>
@@ -1190,14 +1255,14 @@ function App() {
                 <div key={product.id} className="bg-gray-900 p-4 rounded-xl shadow-md border border-gray-700 flex items-center space-x-4">
                   <img
                     src={product.image}
-                    alt={product.name}
+                    alt={product.name[lang] || product.name.ja || product.name} // 顯示翻譯後的名稱
                     className="w-20 h-20 object-cover rounded-lg shadow-sm"
                     onError={(e) => { e.target.onerror = null; e.target.src = `https://placehold.co/80x80/333333/FFFFFF?text=${product.id}`; }}
                   />
                   <div className="flex-grow">
-                    <h4 className="text-xl font-semibold text-red-300">{product.name}</h4>
-                    <p className="text-gray-400">¥{product.price} | {product.category}</p>
-                    <p className="text-gray-500 text-sm italic">{product.shortDescription}</p>
+                    <h4 className="text-xl font-semibold text-red-300">{product.name[lang] || product.name.ja || product.name}</h4> {/* 顯示翻譯後的名稱 */}
+                    <p className="text-gray-400">¥{product.price} | {categoryOptionsMap[product.category] || product.category}</p> {/* 顯示翻譯後的分類 */}
+                    <p className="text-gray-500 text-sm italic">{product.shortDescription[lang] || product.shortDescription.ja || ''}</p> {/* 顯示翻譯後的簡介 */}
                   </div>
                   <div className="flex space-x-2">
                     <button
@@ -1267,6 +1332,7 @@ function App() {
           translations={translations}
           onBackToShop={() => setCurrentPage('shop')}
           isFirebaseReady={isFirebaseReady}
+          currentLanguage={currentLanguage} // 傳遞 currentLanguage
           // onShowFirebaseConfig={() => setShowFirebaseConfigModal(true)} // 此行已移除
         />
       )}
