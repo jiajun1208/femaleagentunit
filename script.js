@@ -286,7 +286,7 @@ function App() {
       ceoBio: '쿠로카와 그룹의 회장인 쿠로카와 치에는 혁신적인 리더십과 탁월한 비전으로 유명합니다. 그의 지도 아래 회사는 기술과 고객 만족도에서 새로운 기준을 세웠습니다.',
       companyCompany: '쿠로카와 그룹은 고품질 제품과 우수한 고객 서비스를 제공하는 데 전념하는 최첨단 기업입니다。私たちは革新を推進し、お客様の生活を豊かにすることを目指しています。',
       enterShop: '쇼핑 시작',
-      productsTitle: '제품',
+      productsTitle: '製品',
       addToCart: '장바구니에 추가',
       viewCart: '장바구니 보기',
       cartTitle: '장바구니',
@@ -326,57 +326,99 @@ function App() {
 
   // 載入 Firebase 配置並初始化 Firebase
   useEffect(() => {
+    console.log("App useEffect: Initializing Firebase...");
     const storedConfig = localStorage.getItem('firebaseConfig');
+    let configToUse = null;
+
     if (storedConfig) {
       try {
-        const parsedConfig = JSON.parse(storedConfig);
-        setFirebaseConfig(parsedConfig);
-        if (window.firebase && !firebaseApp) { 
-          firebaseApp = window.firebase.initializeApp(parsedConfig);
-          db = window.firebase.getFirestore(firebaseApp);
-          auth = window.firebase.getAuth(firebaseApp);
-          console.log("Firebase initialized from stored config.");
-          
-          // 匿名登入
-          window.firebase.signInAnonymously(auth).then(userCredential => {
-            console.log("Signed in anonymously:", userCredential.user.uid);
-            setIsFirebaseReady(true); // Firebase 認證完成
-          }).catch(error => {
-            console.error("Anonymous sign-in failed:", error);
-            setIsFirebaseReady(false);
-          });
-
-        } else if (!window.firebase) {
-          console.warn("Firebase SDK not loaded. Please ensure Firebase scripts in index.html are uncommented and loaded correctly.");
-          setIsFirebaseReady(false);
-        }
+        configToUse = JSON.parse(storedConfig);
+        setFirebaseConfig(configToUse);
+        console.log("App useEffect: Loaded Firebase config from localStorage.");
       } catch (e) {
-        console.error("Failed to parse Firebase config from localStorage:", e);
-        localStorage.removeItem('firebaseConfig'); // 清除無效配置
-        setIsFirebaseReady(false);
+        console.error("App useEffect: Failed to parse Firebase config from localStorage:", e);
+        localStorage.removeItem('firebaseConfig');
       }
-    } else {
-      setIsFirebaseReady(false); // 沒有配置，Firebase 不準備好
+    }
+    
+    // 如果沒有配置，或者解析失敗，則提示用戶需要配置
+    if (!configToUse || Object.keys(configToUse).length === 0 || !configToUse.apiKey) {
+        console.warn("App useEffect: Firebase config is missing or invalid. Please open Firebase Settings and save your configuration.");
+        setIsFirebaseReady(false);
+        // 可以選擇自動打開配置彈窗
+        // setShowFirebaseConfigModal(true); 
+        return; // 不繼續初始化 Firebase
+    }
+
+    if (window.firebase && configToUse && !firebaseApp) { 
+      firebaseApp = window.firebase.initializeApp(configToUse);
+      db = window.firebase.getFirestore(firebaseApp);
+      auth = window.firebase.getAuth(firebaseApp);
+      console.log("App useEffect: Firebase initialized successfully.");
+      
+      window.firebase.signInAnonymously(auth).then(userCredential => {
+        console.log("App useEffect: Signed in anonymously. User UID:", userCredential.user.uid);
+        setIsFirebaseReady(true); // Firebase 認證完成
+      }).catch(error => {
+        console.error("App useEffect: Anonymous sign-in failed:", error);
+        setIsFirebaseReady(false);
+      });
+
+    } else if (!window.firebase) {
+      console.warn("App useEffect: Firebase SDK not loaded. Please ensure Firebase scripts in index.html are uncommented and loaded correctly.");
+      setIsFirebaseReady(false);
+    } else if (firebaseApp) {
+        console.log("App useEffect: Firebase already initialized.");
+        // 如果已經初始化，確保 isFirebaseReady 狀態正確
+        if (auth.currentUser) {
+            setIsFirebaseReady(true);
+        } else {
+            // 如果沒有當前用戶，嘗試匿名登入
+            window.firebase.signInAnonymously(auth).then(userCredential => {
+                console.log("App useEffect: Re-signed in anonymously. User UID:", userCredential.user.uid);
+                setIsFirebaseReady(true);
+            }).catch(error => {
+                console.error("App useEffect: Re-anonymous sign-in failed:", error);
+                setIsFirebaseReady(false);
+            });
+        }
     }
   }, []); // 只在組件掛載時運行一次
 
   // 從 Firestore 實時獲取商品數據
   useEffect(() => {
+    console.log("Products useEffect: isFirebaseReady status:", isFirebaseReady);
     if (isFirebaseReady && db) {
-      const productsColRef = window.firebase.collection(db, 'products');
+      // 確保 __app_id 變數存在
+      const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+      console.log("Products useEffect: Using appId:", appId);
+
+      // Firestore 路徑調整為 /artifacts/{appId}/public/data/products
+      const productsColRef = window.firebase.collection(db, `artifacts/${appId}/public/data/products`);
+      
+      console.log("Products useEffect: Setting up onSnapshot listener for products...");
       const unsubscribe = window.firebase.onSnapshot(productsColRef, (snapshot) => {
         const productsList = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         }));
         setProductsData(productsList);
-        console.log("Products fetched from Firestore:", productsList);
+        console.log("Products useEffect: Products fetched from Firestore:", productsList);
       }, (error) => {
-        console.error("Error fetching products from Firestore:", error);
+        console.error("Products useEffect: Error fetching products from Firestore:", error);
+        // 如果獲取失敗，可以顯示錯誤訊息給用戶
+        // setMessage("載入商品失敗：" + error.message);
       });
 
       // 清理訂閱
-      return () => unsubscribe();
+      return () => {
+        console.log("Products useEffect: Cleaning up onSnapshot listener.");
+        unsubscribe();
+      };
+    } else if (isFirebaseReady && !db) {
+        console.warn("Products useEffect: Firebase is ready, but db instance is null.");
+    } else {
+        console.log("Products useEffect: Firebase not ready, skipping product fetch.");
     }
   }, [isFirebaseReady, db]); // 依賴於 Firebase 是否準備好和 db 實例
 
@@ -416,6 +458,7 @@ function App() {
   const handleSaveFirebaseConfig = (config) => {
     localStorage.setItem('firebaseConfig', JSON.stringify(config));
     setFirebaseConfig(config);
+    console.log("Firebase config saved to localStorage. Reloading page...");
     // 重新載入頁面以應用新的 Firebase 配置
     window.location.reload();
   };
@@ -710,7 +753,7 @@ function App() {
   };
 
   // 管理後台頁面組件
-  const AdminPage = ({ products, lang, translations, onBackToShop, isFirebaseReady }) => {
+  const AdminPage = ({ products, lang, translations, onBackToShop, isFirebaseReady, onShowFirebaseConfig }) => {
     const [editingProduct, setEditingProduct] = useState(null); // null for add, product object for edit
     const [name, setName] = useState('');
     const [price, setPrice] = useState('');
@@ -740,8 +783,8 @@ function App() {
     const handleAddOrUpdateProduct = async (e) => {
       e.preventDefault();
       if (!db) {
-        console.error("Firestore is not initialized.");
-        showMessage("Firestore 未初始化，無法操作。");
+        console.error("AdminPage: Firestore is not initialized.");
+        showMessage("Firestore 未初始化，無法操作。請檢查 Firebase 設定。");
         return;
       }
 
@@ -755,14 +798,16 @@ function App() {
       try {
         if (editingProduct) {
           // Update product
-          const productRef = window.firebase.doc(db, 'products', editingProduct.id);
+          const productRef = window.firebase.doc(db, 'artifacts', typeof __app_id !== 'undefined' ? __app_id : 'default-app-id', 'public', 'data', 'products', editingProduct.id);
           await window.firebase.setDoc(productRef, productData); // Use setDoc to completely replace or create
           showMessage(translations[lang].productUpdated);
+          console.log("AdminPage: Product updated successfully:", editingProduct.id);
         } else {
           // Add new product
-          const productsColRef = window.firebase.collection(db, 'products');
-          await window.firebase.addDoc(productsColRef, productData);
+          const productsColRef = window.firebase.collection(db, 'artifacts', typeof __app_id !== 'undefined' ? __app_id : 'default-app-id', 'public', 'data', 'products');
+          const docRef = await window.firebase.addDoc(productsColRef, productData);
           showMessage(translations[lang].productAdded);
+          console.log("AdminPage: Product added successfully with ID:", docRef.id);
         }
         setEditingProduct(null); // Clear form
         setName('');
@@ -770,24 +815,25 @@ function App() {
         setImage('');
         setCategory('催眠類');
       } catch (error) {
-        console.error("Error adding/updating product:", error);
+        console.error("AdminPage: Error adding/updating product:", error);
         showMessage("操作失敗：" + error.message);
       }
     };
 
     const handleDeleteProduct = async (productId) => {
       if (!db) {
-        console.error("Firestore is not initialized.");
-        showMessage("Firestore 未初始化，無法操作。");
+        console.error("AdminPage: Firestore is not initialized for delete.");
+        showMessage("Firestore 未初始化，無法操作。請檢查 Firebase 設定。");
         return;
       }
       if (window.confirm(translations[lang].confirmDelete)) {
         try {
-          const productRef = window.firebase.doc(db, 'products', productId);
+          const productRef = window.firebase.doc(db, 'artifacts', typeof __app_id !== 'undefined' ? __app_id : 'default-app-id', 'public', 'data', 'products', productId);
           await window.firebase.deleteDoc(productRef);
           showMessage(translations[lang].productDeleted);
+          console.log("AdminPage: Product deleted successfully:", productId);
         } catch (error) {
-          console.error("Error deleting product:", error);
+          console.error("AdminPage: Error deleting product:", error);
           showMessage("刪除失敗：" + error.message);
         }
       }
@@ -799,6 +845,12 @@ function App() {
           <div className="bg-gray-800 p-8 rounded-lg shadow-xl text-center">
             <p className="text-xl text-red-400">{translations[lang].fetchingProducts}</p>
             <p className="text-gray-400 mt-2">請確保 Firebase 配置已儲存並重新載入頁面。</p>
+            <button
+                onClick={onShowFirebaseConfig}
+                className="mt-6 bg-purple-700 hover:bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-300 shadow-md flex items-center justify-center mx-auto"
+            >
+                ⚙️ <span>{translations[lang].firebaseSettings}</span>
+            </button>
           </div>
         </div>
       );
@@ -810,6 +862,15 @@ function App() {
           <h2 className="text-4xl font-extrabold text-red-400 mb-8 border-b border-red-700 pb-4 text-center">
             {translations[lang].adminPanel}
           </h2>
+
+          <div className="flex justify-end mb-4">
+            <button
+                onClick={onShowFirebaseConfig}
+                className="bg-purple-700 hover:bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-300 shadow-md flex items-center space-x-2"
+            >
+                ⚙️ <span>{translations[lang].firebaseSettings}</span>
+            </button>
+          </div>
 
           {message && (
             <div className="bg-green-700 text-white text-center py-3 px-6 rounded-lg mb-6 text-lg font-semibold shadow-lg animate-fade-in">
@@ -988,6 +1049,7 @@ function App() {
           translations={translations}
           onBackToShop={() => setCurrentPage('shop')}
           isFirebaseReady={isFirebaseReady}
+          onShowFirebaseConfig={() => setShowFirebaseConfigModal(true)} // 允許在 AdminPage 顯示 Firebase 設定
         />
       )}
 
@@ -1020,4 +1082,5 @@ function App() {
 
 // Render the App component into the root div
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
 
