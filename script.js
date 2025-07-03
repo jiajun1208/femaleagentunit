@@ -10,7 +10,7 @@ let firebaseApp = null;
 let db = null;
 let auth = null;
 
-// Firebase 配置彈窗組件
+// Firebase 配置彈窗組件 (此組件仍存在，但不再從 AdminPage 觸發)
 const FirebaseConfigModal = ({ onClose, onSave, initialConfig, lang, translations }) => {
   const [config, setConfig] = useState(initialConfig || {
     apiKey: "AIzaSyCZSC4KP9r9Ia74gjhVM4hkhkCiXU6ltR4",
@@ -135,6 +135,9 @@ function App() {
       productDeleted: '商品已刪除！',
       fetchingProducts: '正在載入商品...',
       noProducts: '目前沒有商品。',
+      productShortDescription: '商品簡介', // 新增翻譯
+      productDetailedDescription: '商品詳細介紹', // 新增翻譯
+      backToProducts: '返回商品列表', // 新增翻譯
     },
     en: {
       appName: 'FAU SHOPPING',
@@ -189,6 +192,9 @@ function App() {
       productDeleted: 'Product deleted successfully!',
       fetchingProducts: 'Fetching products...',
       noProducts: 'No products available.',
+      productShortDescription: 'Short Description', // 新增翻譯
+      productDetailedDescription: 'Detailed Description', // 新增翻譯
+      backToProducts: 'Back to Products', // 新增翻譯
     },
     'zh-tw': {
       appName: 'FAU SHOPPING',
@@ -196,7 +202,7 @@ function App() {
       ceoProfileTitle: '社長簡介',
       companyProfileTitle: '公司簡介',
       ceoName: '黑川 智慧',
-      ceoBio: '黑川集團董事長黑川智慧以其創新的領導力和卓越的遠見而聞名。在他的指導下，公司在技術和客戶滿意度方面樹立了新的標準。',
+      ceoBio: '黑川集團董事長黑川智慧以其創新的領導力和卓越的遠見而聞聞。在他的指導下，公司在技術和客戶滿意度方面樹立了新的標準。',
       companyCompany: '黑川集團是一家致力於提供高品質產品和卓越客戶服務的尖端企業。我們致力於推動創新，豐富客戶的生活。',
       enterShop: '進入購物頁面',
       productsTitle: '我們的產品',
@@ -243,6 +249,9 @@ function App() {
       productDeleted: '商品已刪除！',
       fetchingProducts: '正在載入商品...',
       noProducts: '目前沒有商品。',
+      productShortDescription: '商品簡介', // 新增翻譯
+      productDetailedDescription: '商品詳細介紹', // 新增翻譯
+      backToProducts: '返回商品列表', // 新增翻譯
     },
     'zh-cn': {
       appName: 'FAU SHOPPING',
@@ -313,7 +322,7 @@ function App() {
   };
 
   // 狀態管理：當前頁面、購物車、當前語言、購物車彈窗是否顯示、選定的商品分類
-  const [currentPage, setCurrentPage] = useState('intro'); // 'intro', 'shop', 'checkout', 'admin'
+  const [currentPage, setCurrentPage] = useState('intro'); // 'intro', 'shop', 'checkout', 'admin', 'productDetail'
   const [cart, setCart] = useState([]);
   const [currentLanguage, setCurrentLanguage] = useState('ja'); // 預設日文
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -323,6 +332,7 @@ function App() {
   const [firebaseConfig, setFirebaseConfig] = useState(null); // 儲存 Firebase 配置
   const [productsData, setProductsData] = useState([]); // 從 Firestore 載入的商品數據
   const [isFirebaseReady, setIsFirebaseReady] = useState(false); // Firebase 是否初始化完成
+  const [selectedProductId, setSelectedProductId] = useState(null); // 儲存選定商品的ID
 
   // 硬編碼的 Firebase 配置 (請替換為您自己的專案詳細資訊)
   const firebaseConfigHardcoded = {
@@ -472,6 +482,12 @@ function App() {
     window.location.reload();
   };
 
+  // 處理商品卡片點擊，導航到商品詳情頁面
+  const handleProductClick = (productId) => {
+    setSelectedProductId(productId);
+    setCurrentPage('productDetail');
+  };
+
   // 購物車彈窗組件
   const CartModal = ({ cartItems, onClose, onRemoveFromCart, onCheckout, lang, translations }) => {
     const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -535,8 +551,11 @@ function App() {
   };
 
   // 商品卡片組件
-  const ProductCard = ({ product, onAddToCart, lang, translations }) => (
-    <div className="bg-gray-800 rounded-xl shadow-lg overflow-hidden transform transition-transform duration-300 hover:scale-105 hover:shadow-2xl flex flex-col">
+  const ProductCard = ({ product, onAddToCart, lang, translations, onProductClick }) => (
+    <div
+      className="bg-gray-800 rounded-xl shadow-lg overflow-hidden transform transition-transform duration-300 hover:scale-105 hover:shadow-2xl flex flex-col cursor-pointer"
+      onClick={() => onProductClick(product.id)} // 點擊卡片導航到詳情頁
+    >
       <img
         src={product.image}
         alt={product.name}
@@ -545,11 +564,12 @@ function App() {
       />
       <div className="p-5 flex flex-col flex-grow">
         <h3 className="text-xl font-semibold text-purple-300 mb-2">{product.name}</h3>
-        <p className="text-gray-400 text-sm mb-3 flex-grow">{translations[lang].productDescription}</p>
+        {/* 顯示商品簡介 */}
+        <p className="text-gray-400 text-sm mb-3 flex-grow">{product.shortDescription || translations[lang].productDescription}</p>
         <div className="flex justify-between items-center mt-auto gap-x-6"> {/* 增加價格與按鈕間距 */}
           <span className="text-2xl font-bold text-red-400">¥{product.price}</span>
           <button
-            onClick={() => onAddToCart(product)}
+            onClick={(e) => { e.stopPropagation(); onAddToCart(product); }} // 阻止事件冒泡，避免點擊按鈕也觸發詳情頁
             className="bg-red-700 hover:bg-red-600 text-white px-5 py-2 rounded-full font-semibold transition-colors duration-300 shadow-md transform hover:scale-105"
           >
             {translations[lang].addToCart}
@@ -598,7 +618,7 @@ function App() {
   );
 
   // 購物頁面組件
-  const ShopPage = ({ products, onAddToCart, cartCount, onViewCart, lang, translations, onCategoryChange, selectedCategory, onViewIntro, onNavigateToAdmin }) => (
+  const ShopPage = ({ products, onAddToCart, cartCount, onViewCart, lang, translations, onCategoryChange, selectedCategory, onViewIntro, onNavigateToAdmin, onProductClick }) => (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-purple-900 text-white flex flex-col">
       {/* 頂部導航欄 */}
       <header className="w-full bg-gray-900 p-4 shadow-xl flex items-center justify-center relative">
@@ -679,6 +699,7 @@ function App() {
               onAddToCart={addToCart} // Pass addToCart directly
               lang={lang}
               translations={translations}
+              onProductClick={handleProductClick} // 傳遞點擊處理函數
             />
           ))}
         </div>
@@ -761,13 +782,73 @@ function App() {
     );
   };
 
+  // 商品詳情頁面組件
+  const ProductDetailPage = ({ productId, productsData, onBackToShop, onAddToCart, lang, translations }) => {
+    const product = productsData.find(p => p.id === productId);
+
+    if (!product) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-purple-900 text-white flex items-center justify-center p-4">
+          <div className="bg-gray-800 p-8 rounded-lg shadow-xl text-center">
+            <p className="text-xl text-red-400">商品未找到。</p>
+            <button
+              onClick={onBackToShop}
+              className="mt-6 bg-gray-700 hover:bg-gray-600 text-gray-300 text-xl font-semibold py-4 px-8 rounded-full shadow-md transform hover:scale-105 transition-all duration-300 flex items-center justify-center mx-auto"
+            >
+              ⬅️ {translations[lang].backToProducts}
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-purple-900 text-white flex flex-col items-center p-4">
+        <div className="bg-gray-800 bg-opacity-90 rounded-2xl shadow-2xl p-8 md:p-12 max-w-4xl w-full border border-purple-700">
+          <button
+            onClick={onBackToShop}
+            className="mb-8 bg-gray-700 hover:bg-gray-600 text-gray-300 text-xl font-semibold py-3 px-6 rounded-full shadow-md transform hover:scale-105 transition-all duration-300 flex items-center"
+          >
+            ⬅️ {translations[lang].backToProducts}
+          </button>
+
+          <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
+            <div className="w-full md:w-1/2 flex-shrink-0">
+              <img
+                src={product.image}
+                alt={product.name}
+                className="w-full h-auto object-cover rounded-xl shadow-lg"
+                onError={(e) => { e.target.onerror = null; e.target.src = `https://placehold.co/600x400/333333/FFFFFF?text=${product.id}`; }}
+              />
+            </div>
+            <div className="w-full md:w-1/2">
+              <h1 className="text-4xl font-extrabold text-red-400 mb-4">{product.name}</h1>
+              <p className="text-purple-300 text-2xl font-bold mb-4">¥{product.price}</p>
+              <p className="text-gray-300 text-lg mb-6">{product.detailedDescription || translations[lang].productDescription}</p>
+              <p className="text-gray-400 text-md mb-8">分類: {product.category}</p>
+              <button
+                onClick={() => onAddToCart(product)}
+                className="w-full bg-red-600 hover:bg-red-500 text-white text-xl font-bold py-3 px-6 rounded-full shadow-lg transform hover:scale-105 transition-all duration-300"
+              >
+                {translations[lang].addToCart}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+
   // 管理後台頁面組件
-  const AdminPage = ({ products, lang, translations, onBackToShop, isFirebaseReady, onShowFirebaseConfig }) => {
+  const AdminPage = ({ products, lang, translations, onBackToShop, isFirebaseReady }) => { // 移除 onShowFirebaseConfig
     const [editingProduct, setEditingProduct] = useState(null); // null for add, product object for edit
     const [name, setName] = useState('');
     const [price, setPrice] = useState('');
     const [image, setImage] = useState('');
     const [category, setCategory] = useState('催眠類'); // Default category
+    const [shortDescription, setShortDescription] = useState(''); // 新增簡介狀態
+    const [detailedDescription, setDetailedDescription] = useState(''); // 新增詳細介紹狀態
     const [message, setMessage] = useState(''); // Feedback message
 
     useEffect(() => {
@@ -776,11 +857,15 @@ function App() {
         setPrice(editingProduct.price);
         setImage(editingProduct.image);
         setCategory(editingProduct.category);
+        setShortDescription(editingProduct.shortDescription || ''); // 載入簡介
+        setDetailedDescription(editingProduct.detailedDescription || ''); // 載入詳細介紹
       } else {
         setName('');
         setPrice('');
         setImage('');
         setCategory('催眠類');
+        setShortDescription('');
+        setDetailedDescription('');
       }
     }, [editingProduct]);
 
@@ -801,7 +886,9 @@ function App() {
         name,
         price: parseFloat(price),
         image,
-        category
+        category,
+        shortDescription, // 儲存簡介
+        detailedDescription // 儲存詳細介紹
       };
 
       try {
@@ -826,6 +913,8 @@ function App() {
         setPrice('');
         setImage('');
         setCategory('催眠類');
+        setShortDescription('');
+        setDetailedDescription('');
       } catch (error) {
         console.error("AdminPage: Error adding/updating product:", error);
         showMessage("操作失敗：" + error.message);
@@ -859,12 +948,7 @@ function App() {
           <div className="bg-gray-800 p-8 rounded-lg shadow-xl text-center">
             <p className="text-xl text-red-400">{translations[lang].fetchingProducts}</p>
             <p className="text-gray-400 mt-2">請確保 Firebase 配置已儲存並重新載入頁面。</p>
-            <button
-                onClick={onShowFirebaseConfig}
-                className="mt-6 bg-purple-700 hover:bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-300 shadow-md flex items-center justify-center mx-auto"
-            >
-                ⚙️ <span>{translations[lang].firebaseSettings}</span>
-            </button>
+            {/* Firebase 設定按鈕已移除 */}
           </div>
         </div>
       );
@@ -877,14 +961,15 @@ function App() {
             {translations[lang].adminPanel}
           </h2>
 
-          <div className="flex justify-end mb-4">
+          {/* Firebase 設定按鈕已移除 */}
+          {/* <div className="flex justify-end mb-4">
             <button
                 onClick={onShowFirebaseConfig}
                 className="bg-purple-700 hover:bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-300 shadow-md flex items-center space-x-2"
             >
                 ⚙️ <span>{translations[lang].firebaseSettings}</span>
             </button>
-          </div>
+          </div> */}
 
           {message && (
             <div className="bg-green-700 text-white text-center py-3 px-6 rounded-lg mb-6 text-lg font-semibold shadow-lg animate-fade-in">
@@ -956,6 +1041,32 @@ function App() {
                   <option value="特工用品">{translations[lang].categoryAgentGear}</option>
                 </select>
               </div>
+              <div className="md:col-span-2">
+                <label htmlFor="shortDescription" className="block text-gray-300 text-sm font-semibold mb-1">
+                  {translations[lang].productShortDescription}:
+                </label>
+                <textarea
+                  id="shortDescription"
+                  value={shortDescription}
+                  onChange={(e) => setShortDescription(e.target.value)}
+                  className="w-full p-3 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500 text-white h-24"
+                  placeholder="輸入商品簡短介紹 (顯示在商品卡片上)"
+                  required
+                ></textarea>
+              </div>
+              <div className="md:col-span-2">
+                <label htmlFor="detailedDescription" className="block text-gray-300 text-sm font-semibold mb-1">
+                  {translations[lang].productDetailedDescription}:
+                </label>
+                <textarea
+                  id="detailedDescription"
+                  value={detailedDescription}
+                  onChange={(e) => setDetailedDescription(e.target.value)}
+                  className="w-full p-3 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500 text-white h-32"
+                  placeholder="輸入商品詳細介紹 (顯示在商品專屬頁面上)"
+                  required
+                ></textarea>
+              </div>
             </div>
             <div className="mt-8 flex justify-end space-x-4">
               <button
@@ -995,6 +1106,7 @@ function App() {
                   <div className="flex-grow">
                     <h4 className="text-xl font-semibold text-red-300">{product.name}</h4>
                     <p className="text-gray-400">¥{product.price} | {product.category}</p>
+                    <p className="text-gray-500 text-sm italic">{product.shortDescription}</p>
                   </div>
                   <div className="flex space-x-2">
                     <button
@@ -1046,6 +1158,7 @@ function App() {
           selectedCategory={selectedCategory}
           onViewIntro={() => setCurrentPage('intro')}
           onNavigateToAdmin={() => setCurrentPage('admin')} // 新增導航到管理後台
+          onProductClick={handleProductClick} // 傳遞商品點擊處理函數
         />
       )}
       {currentPage === 'checkout' && (
@@ -1063,7 +1176,17 @@ function App() {
           translations={translations}
           onBackToShop={() => setCurrentPage('shop')}
           isFirebaseReady={isFirebaseReady}
-          onShowFirebaseConfig={() => setShowFirebaseConfigModal(true)} // 允許在 AdminPage 顯示 Firebase 設定
+          // onShowFirebaseConfig={() => setShowFirebaseConfigModal(true)} // 移除此行
+        />
+      )}
+      {currentPage === 'productDetail' && (
+        <ProductDetailPage
+          productId={selectedProductId}
+          productsData={productsData}
+          onBackToShop={() => setCurrentPage('shop')}
+          onAddToCart={addToCart}
+          lang={currentLanguage}
+          translations={translations}
         />
       )}
 
