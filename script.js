@@ -10,17 +10,17 @@ let firebaseApp = null;
 let db = null;
 let auth = null;
 
-// Firebase 配置彈窗組件 (此組件仍存在，用於手動輸入配置)
+// Firebase 配置彈窗組件 (此組件仍存在，但不再從 AdminPage 觸發)
 const FirebaseConfigModal = ({ onClose, onSave, initialConfig, lang, translations }) => {
   const [config, setConfig] = useState(initialConfig || {
-    apiKey: "AIzaSyCZSC4KP9r9Ia74gjhVM4hkhkCiXU6ltR4",
-    authDomain: "avny-ccbe9.firebaseapp.com",
-    databaseURL: "https://avny-ccbe9-default-rtdb.firebaseio.com",
-    projectId: "avny-ccbe9",
-    storageBucket: "avny-ccbe9.firebasestorage.app",
-    messagingSenderId: "686829295344",
-    appId: "1:686829295344:web:f0928898f8af0ab3701435",
-    measurementId: "G-QQYT04PKLL"
+     apiKey: "AIzaSyCZSC4KP9r9Ia74gjhVM4hkhkCiXU6ltR4",
+     authDomain: "avny-ccbe9.firebaseapp.com",
+     databaseURL: "https://avny-ccbe9-default-rtdb.firebaseio.com",
+     projectId: "avny-ccbe9",
+     storageBucket: "avny-ccbe9.firebasestorage.app",
+     messagingSenderId: "686829295344",
+     appId: "1:686829295344:web:f0928898f8af0ab3701435",
+     measurementId: "G-QQYT04PKLL"
   });
 
   const handleChange = (e) => {
@@ -338,14 +338,14 @@ function App() {
   // 您可以在 Firebase 控制台 (console.firebase.google.com) > 專案設定 (Project settings) > 您的應用程式 (Your apps) 中找到這些資訊。
   // 請確保將 'YOUR_API_KEY' 等佔位符替換為實際的值，並保留引號。
   const firebaseConfigHardcoded = {
-      apiKey: "AIzaSyCZSC4KP9r9Ia74gjhVM4hkhkCiXU6ltR4",
-      authDomain: "avny-ccbe9.firebaseapp.com",
-      databaseURL: "https://avny-ccbe9-default-rtdb.firebaseio.com",
-      projectId: "avny-ccbe9",
-      storageBucket: "avny-ccbe9.firebasestorage.app",
-      messagingSenderId: "686829295344",
-      appId: "1:686829295344:web:f0928898f8af0ab3701435",
-      measurementId: "G-QQYT04PKLL"
+       apiKey: "AIzaSyCZSC4KP9r9Ia74gjhVM4hkhkCiXU6ltR4",
+       authDomain: "avny-ccbe9.firebaseapp.com",
+       databaseURL: "https://avny-ccbe9-default-rtdb.firebaseio.com",
+       projectId: "avny-ccbe9",
+       storageBucket: "avny-ccbe9.firebasestorage.app",
+       messagingSenderId: "686829295344",
+       appId: "1:686829295344:web:f0928898f8af0ab3701435",
+       measurementId: "G-QQYT04PKLL"
   };
 
   // 載入 Firebase 配置並初始化 Firebase
@@ -491,7 +491,7 @@ function App() {
     ? productsData
     : productsData.filter(product => product.category === selectedCategory);
 
-  // 處理 Firebase 配置儲存
+  // 處理 Firebase 配置儲存 (此函數仍存在，但不會從 AdminPage 觸發)
   const handleSaveFirebaseConfig = (config) => {
     localStorage.setItem('firebaseConfig', JSON.stringify(config));
     setFirebaseConfig(config);
@@ -859,7 +859,7 @@ function App() {
 
 
   // 管理後台頁面組件
-  const AdminPage = ({ products, lang, translations, onBackToShop, isFirebaseReady, onShowFirebaseConfig }) => { // 重新傳遞 onShowFirebaseConfig
+  const AdminPage = ({ products, lang, translations, onBackToShop, isFirebaseReady }) => { // 移除 onShowFirebaseConfig
     const [editingProduct, setEditingProduct] = useState(null); // null for add, product object for edit
     const [name, setName] = useState('');
     const [price, setPrice] = useState('');
@@ -966,13 +966,7 @@ function App() {
           <div className="bg-gray-800 p-8 rounded-lg shadow-xl text-center">
             <p className="text-xl text-red-400">{translations[lang].fetchingProducts}</p>
             <p className="text-gray-400 mt-2">請確保 Firebase 配置已儲存並重新載入頁面。</p>
-            {/* 重新加入 Firebase 設定按鈕，用於排查問題 */}
-            <button
-                onClick={onShowFirebaseConfig}
-                className="mt-6 bg-purple-700 hover:bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-300 shadow-md flex items-center justify-center mx-auto"
-            >
-                ⚙️ <span>{translations[lang].firebaseSettings}</span>
-            </button>
+            {/* Firebase 設定按鈕已移除 */}
           </div>
         </div>
       );
@@ -985,15 +979,15 @@ function App() {
             {translations[lang].adminPanel}
           </h2>
 
-          {/* 重新加入 Firebase 設定按鈕，用於排查問題 */}
-          <div className="flex justify-end mb-4">
+          {/* Firebase 設定按鈕已移除 */}
+          {/* <div className="flex justify-end mb-4">
             <button
-                onClick={onShowFirebaseConfig}
+                onClick={onShowFirebaseConfig} // 此行已移除
                 className="bg-purple-700 hover:bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-300 shadow-md flex items-center space-x-2"
             >
                 ⚙️ <span>{translations[lang].firebaseSettings}</span>
             </button>
-          </div>
+          </div> */}
 
           {message && (
             <div className="bg-green-700 text-white text-center py-3 px-6 rounded-lg mb-6 text-lg font-semibold shadow-lg animate-fade-in">
@@ -1200,7 +1194,7 @@ function App() {
           translations={translations}
           onBackToShop={() => setCurrentPage('shop')}
           isFirebaseReady={isFirebaseReady}
-          onShowFirebaseConfig={() => setShowFirebaseConfigModal(true)} // 允許在 AdminPage 顯示 Firebase 設定
+          // onShowFirebaseConfig={() => setShowFirebaseConfigModal(true)} // 此行已移除
         />
       )}
       {currentPage === 'productDetail' && (
@@ -1228,7 +1222,8 @@ function App() {
         />
       )}
 
-      {showFirebaseConfigModal && (
+      {/* Firebase 設定彈窗現在只能由程式碼內部邏輯觸發，無法從 UI 訪問 */}
+      {/* {showFirebaseConfigModal && (
         <FirebaseConfigModal
           onClose={() => setShowFirebaseConfigModal(false)}
           onSave={handleSaveFirebaseConfig}
@@ -1236,11 +1231,10 @@ function App() {
           lang={currentLanguage}
           translations={translations}
         />
-      )}
+      )} */}
     </div>
   );
 }
 
 // Render the App component into the root div
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
-
