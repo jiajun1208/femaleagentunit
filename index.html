@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAU SHOPPING</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font (Tailwind default) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+    <!-- React CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Lucide Icons CDN (for React components) -->
+    <script src="https://unpkg.com/lucide-react@latest/dist/umd/lucide-react.js"></script>
+    <!-- Firebase SDKs (Optional: Uncomment and configure if you plan to use Firebase) -->
+    <!--
+    <script type="module">
+        // Import Firebase modules from CDN
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // IMPORTANT: Replace with your actual Firebase configuration when deploying to GitHub Pages
+        // const firebaseConfig = {
+        //   apiKey: "YOUR_API_KEY",
+        //   authDomain: "YOUR_AUTH_DOMAIN",
+        //   projectId: "YOUR_PROJECT_ID",
+        //   storageBucket: "YOUR_STORAGE_BUCKET",
+        //   messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+        //   appId: "YOUR_APP_ID"
+        // };
+
+        // Initialize Firebase (uncomment and use your config)
+        // const app = initializeApp(firebaseConfig);
+        // const db = getFirestore(app);
+        // const auth = getAuth(app);
+
+        // Global variables for Firebase (if used)
+        // window.__app_id = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        // window.__firebase_config = JSON.stringify(firebaseConfig);
+        // window.__initial_auth_token = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Example: Anonymous sign-in for Firebase (uncomment if using Firebase)
+        // async function initializeFirebaseAndAuth() {
+        //     if (typeof window.__initial_auth_token !== 'undefined' && window.__initial_auth_token !== null) {
+        //         await signInWithCustomToken(auth, window.__initial_auth_token);
+        //     } else {
+        //         await signInAnonymously(auth);
+        //     }
+        //     console.log("Firebase initialized and authenticated.");
+        // }
+        // initializeFirebaseAndAuth();
+
+        // Make Firebase instances globally available if needed by main.js (e.g., for direct DOM manipulation or non-React parts)
+        // window.db = db;
+        // window.auth = auth;
+    </script>
+    -->
+</head>
+<body class="bg-black font-sans antialiased">
+    <div id="root"></div>
+
+    <!-- Your React App JavaScript -->
+    <script type="module" src="main.js"></script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+/* Custom scrollbar for cart modal */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #333;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #8B0000; /* Dark Red */
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #B22222; /* Slightly lighter red on hover */
+}
+
+/* Ensure the root element takes full height */
+#root {
+  min-height: 100vh;
+}
