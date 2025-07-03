@@ -1,6 +1,9 @@
-// React and ReactDOM are now assumed to be globally available via UMD bundles in index.html
+// Explicitly get React and ReactDOM from the global window object
+const React = window.React;
+const ReactDOM = window.ReactDOM;
+
+// Now destructure from the React object
 const { useState, useEffect } = React;
-const ReactDOM = window.ReactDOM; // Explicitly get ReactDOM from window
 
 // Lucide Icons are globally available via UMD build linked in index.html
 const { ShoppingCart, ChevronRight, User, Building, X, Info, ArrowLeft, Settings } = lucideReact;
@@ -250,7 +253,7 @@ function App() {
       language: '언어',
       languageOptions: {
         ja: '일본어',
-        en: '영어',
+        en: '英語',
         'zh-tw': '번체 중국어',
         'zh-cn': '간체 중국어',
         ko: '한국어',
@@ -722,3 +725,4 @@ function App() {
 
 // Render the App component into the root div
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
