@@ -10,7 +10,7 @@ let firebaseApp = null;
 let db = null;
 let auth = null;
 
-// Firebase 配置彈窗組件 (此組件仍存在，但不再從 AdminPage 觸發)
+// Firebase 配置彈窗組件 (此組件仍存在，用於手動輸入配置)
 const FirebaseConfigModal = ({ onClose, onSave, initialConfig, lang, translations }) => {
   const [config, setConfig] = useState(initialConfig || {
     apiKey: "AIzaSyCZSC4KP9r9Ia74gjhVM4hkhkCiXU6ltR4",
@@ -336,13 +336,13 @@ function App() {
 
   // 硬編碼的 Firebase 配置 (請替換為您自己的專案詳細資訊)
   const firebaseConfigHardcoded = {
-      apiKey: "YOUR_API_KEY", // <-- 請替換為您的 API Key
-      authDomain: "YOUR_AUTH_DOMAIN", // <-- 請替換為您的 Auth Domain
-      projectId: "YOUR_PROJECT_ID", // <-- 請替換為您的 Project ID
-      storageBucket: "YOUR_STORAGE_BUCKET", // <-- 請替換為您的 Storage Bucket
-      messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // <-- 請替換為您的 Messaging Sender ID
-      appId: "YOUR_APP_ID", // <-- 請替換為您的 App ID
-      measurementId: "YOUR_MEASUREMENT_ID" // 可選，請替換為您的 Measurement ID
+      apiKey: "YOUR_API_KEY", // <-- 請務必替換為您 Firebase 專案的實際 API Key
+      authDomain: "YOUR_AUTH_DOMAIN", // <-- 請務必替換為您 Firebase 專案的實際 Auth Domain
+      projectId: "YOUR_PROJECT_ID", // <-- 請務必替換為您 Firebase 專案的實際 Project ID
+      storageBucket: "YOUR_STORAGE_BUCKET", // <-- 請務必替換為您 Firebase 專案的實際 Storage Bucket
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // <-- 請務必替換為您 Firebase 專案的實際 Messaging Sender ID
+      appId: "YOUR_APP_ID", // <-- 請務必替換為您 Firebase 專案的實際 App ID
+      measurementId: "YOUR_MEASUREMENT_ID" // 可選，請務必替換為您 Firebase 專案的實際 Measurement ID
   };
 
   // 載入 Firebase 配置並初始化 Firebase
@@ -354,26 +354,38 @@ function App() {
     if (storedConfig) {
       try {
         configToUse = JSON.parse(storedConfig);
-        setFirebaseConfig(configToUse);
-        console.log("App useEffect: Loaded Firebase config from localStorage.");
+        // 驗證從 localStorage 載入的配置是否有效
+        if (configToUse && configToUse.apiKey && configToUse.projectId) {
+            setFirebaseConfig(configToUse);
+            console.log("App useEffect: Loaded valid Firebase config from localStorage.");
+        } else {
+            console.warn("App useEffect: localStorage config is invalid or incomplete. Falling back to hardcoded config.");
+            localStorage.removeItem('firebaseConfig'); // 清除無效配置
+        }
       } catch (e) {
         console.error("App useEffect: Failed to parse Firebase config from localStorage:", e);
-        localStorage.removeItem('firebaseConfig');
+        localStorage.removeItem('firebaseConfig'); // 清除無效配置
       }
     }
     
     // 如果 localStorage 沒有有效配置，則使用硬編碼的配置
-    if (!configToUse || Object.keys(configToUse).length === 0 || !configToUse.apiKey) {
+    if (!configToUse || !configToUse.apiKey || !configToUse.projectId) {
         configToUse = firebaseConfigHardcoded;
         setFirebaseConfig(firebaseConfigHardcoded); // 也儲存到 state
         console.warn("App useEffect: Using hardcoded Firebase config. Please replace placeholder values with your actual Firebase project details in the code or set them via the Admin Panel's Firebase Settings modal for persistence.");
     }
 
-    if (window.firebase && configToUse && !firebaseApp) { 
+    // 在嘗試初始化 Firebase 之前，先印出正在使用的配置
+    console.log("App useEffect: Attempting to initialize Firebase with config:", configToUse);
+    console.log("App useEffect: Current __app_id:", typeof __app_id !== 'undefined' ? __app_id : 'default-app-id');
+
+
+    // 只有當 window.firebase (SDK) 載入且有有效的 configToUse 時才初始化 Firebase
+    if (window.firebase && configToUse && configToUse.apiKey && configToUse.projectId && !firebaseApp) { 
       firebaseApp = window.firebase.initializeApp(configToUse);
       db = window.firebase.getFirestore(firebaseApp);
       auth = window.firebase.getAuth(firebaseApp);
-      console.log("App useEffect: Firebase initialized successfully.");
+      console.log("App useEffect: Firebase initialized successfully. Attempting anonymous sign-in...");
       
       window.firebase.signInAnonymously(auth).then(userCredential => {
         console.log("App useEffect: Signed in anonymously. User UID:", userCredential.user.uid);
@@ -401,6 +413,9 @@ function App() {
                 setIsFirebaseReady(false);
             });
         }
+    } else {
+        console.warn("App useEffect: Firebase initialization skipped due to missing or invalid configuration.");
+        setIsFirebaseReady(false);
     }
   }, []); // 只在組件掛載時運行一次
 
@@ -410,7 +425,7 @@ function App() {
     if (isFirebaseReady && db) {
       // 確保 __app_id 變數存在
       const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-      console.log("Products useEffect: Using appId:", appId);
+      console.log("Products useEffect: Using appId for Firestore path:", appId);
 
       // Firestore 路徑調整為 /artifacts/{appId}/public/data/products
       const productsColRef = window.firebase.collection(db, `artifacts/${appId}/public/data/products`);
@@ -841,7 +856,7 @@ function App() {
 
 
   // 管理後台頁面組件
-  const AdminPage = ({ products, lang, translations, onBackToShop, isFirebaseReady }) => { // 移除 onShowFirebaseConfig
+  const AdminPage = ({ products, lang, translations, onBackToShop, isFirebaseReady, onShowFirebaseConfig }) => { // 重新傳遞 onShowFirebaseConfig
     const [editingProduct, setEditingProduct] = useState(null); // null for add, product object for edit
     const [name, setName] = useState('');
     const [price, setPrice] = useState('');
@@ -948,7 +963,13 @@ function App() {
           <div className="bg-gray-800 p-8 rounded-lg shadow-xl text-center">
             <p className="text-xl text-red-400">{translations[lang].fetchingProducts}</p>
             <p className="text-gray-400 mt-2">請確保 Firebase 配置已儲存並重新載入頁面。</p>
-            {/* Firebase 設定按鈕已移除 */}
+            {/* 重新加入 Firebase 設定按鈕，用於排查問題 */}
+            <button
+                onClick={onShowFirebaseConfig}
+                className="mt-6 bg-purple-700 hover:bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-300 shadow-md flex items-center justify-center mx-auto"
+            >
+                ⚙️ <span>{translations[lang].firebaseSettings}</span>
+            </button>
           </div>
         </div>
       );
@@ -961,15 +982,15 @@ function App() {
             {translations[lang].adminPanel}
           </h2>
 
-          {/* Firebase 設定按鈕已移除 */}
-          {/* <div className="flex justify-end mb-4">
+          {/* 重新加入 Firebase 設定按鈕，用於排查問題 */}
+          <div className="flex justify-end mb-4">
             <button
                 onClick={onShowFirebaseConfig}
                 className="bg-purple-700 hover:bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-300 shadow-md flex items-center space-x-2"
             >
                 ⚙️ <span>{translations[lang].firebaseSettings}</span>
             </button>
-          </div> */}
+          </div>
 
           {message && (
             <div className="bg-green-700 text-white text-center py-3 px-6 rounded-lg mb-6 text-lg font-semibold shadow-lg animate-fade-in">
@@ -1176,7 +1197,7 @@ function App() {
           translations={translations}
           onBackToShop={() => setCurrentPage('shop')}
           isFirebaseReady={isFirebaseReady}
-          // onShowFirebaseConfig={() => setShowFirebaseConfigModal(true)} // 移除此行
+          onShowFirebaseConfig={() => setShowFirebaseConfigModal(true)} // 允許在 AdminPage 顯示 Firebase 設定
         />
       )}
       {currentPage === 'productDetail' && (
@@ -1219,6 +1240,3 @@ function App() {
 
 // Render the App component into the root div
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
-
-
-
