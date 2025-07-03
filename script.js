@@ -324,6 +324,17 @@ function App() {
   const [productsData, setProductsData] = useState([]); // 從 Firestore 載入的商品數據
   const [isFirebaseReady, setIsFirebaseReady] = useState(false); // Firebase 是否初始化完成
 
+  // 硬編碼的 Firebase 配置 (請替換為您自己的專案詳細資訊)
+  const firebaseConfigHardcoded = {
+      apiKey: "YOUR_API_KEY", // <-- 請替換為您的 API Key
+      authDomain: "YOUR_AUTH_DOMAIN", // <-- 請替換為您的 Auth Domain
+      projectId: "YOUR_PROJECT_ID", // <-- 請替換為您的 Project ID
+      storageBucket: "YOUR_STORAGE_BUCKET", // <-- 請替換為您的 Storage Bucket
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // <-- 請替換為您的 Messaging Sender ID
+      appId: "YOUR_APP_ID", // <-- 請替換為您的 App ID
+      measurementId: "YOUR_MEASUREMENT_ID" // 可選，請替換為您的 Measurement ID
+  };
+
   // 載入 Firebase 配置並初始化 Firebase
   useEffect(() => {
     console.log("App useEffect: Initializing Firebase...");
@@ -341,13 +352,11 @@ function App() {
       }
     }
     
-    // 如果沒有配置，或者解析失敗，則提示用戶需要配置
+    // 如果 localStorage 沒有有效配置，則使用硬編碼的配置
     if (!configToUse || Object.keys(configToUse).length === 0 || !configToUse.apiKey) {
-        console.warn("App useEffect: Firebase config is missing or invalid. Please open Firebase Settings and save your configuration.");
-        setIsFirebaseReady(false);
-        // 可以選擇自動打開配置彈窗
-        // setShowFirebaseConfigModal(true); 
-        return; // 不繼續初始化 Firebase
+        configToUse = firebaseConfigHardcoded;
+        setFirebaseConfig(firebaseConfigHardcoded); // 也儲存到 state
+        console.warn("App useEffect: Using hardcoded Firebase config. Please replace placeholder values with your actual Firebase project details in the code or set them via the Admin Panel's Firebase Settings modal for persistence.");
     }
 
     if (window.firebase && configToUse && !firebaseApp) { 
@@ -796,15 +805,18 @@ function App() {
       };
 
       try {
+        // 確保 __app_id 變數存在
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
         if (editingProduct) {
           // Update product
-          const productRef = window.firebase.doc(db, 'artifacts', typeof __app_id !== 'undefined' ? __app_id : 'default-app-id', 'public', 'data', 'products', editingProduct.id);
+          const productRef = window.firebase.doc(db, 'artifacts', appId, 'public', 'data', 'products', editingProduct.id);
           await window.firebase.setDoc(productRef, productData); // Use setDoc to completely replace or create
           showMessage(translations[lang].productUpdated);
           console.log("AdminPage: Product updated successfully:", editingProduct.id);
         } else {
           // Add new product
-          const productsColRef = window.firebase.collection(db, 'artifacts', typeof __app_id !== 'undefined' ? __app_id : 'default-app-id', 'public', 'data', 'products');
+          const productsColRef = window.firebase.collection(db, 'artifacts', appId, 'public', 'data', 'products');
           const docRef = await window.firebase.addDoc(productsColRef, productData);
           showMessage(translations[lang].productAdded);
           console.log("AdminPage: Product added successfully with ID:", docRef.id);
@@ -828,7 +840,9 @@ function App() {
       }
       if (window.confirm(translations[lang].confirmDelete)) {
         try {
-          const productRef = window.firebase.doc(db, 'artifacts', typeof __app_id !== 'undefined' ? __app_id : 'default-app-id', 'public', 'data', 'products', productId);
+          // 確保 __app_id 變數存在
+          const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+          const productRef = window.firebase.doc(db, 'artifacts', appId, 'public', 'data', 'products', productId);
           await window.firebase.deleteDoc(productRef);
           showMessage(translations[lang].productDeleted);
           console.log("AdminPage: Product deleted successfully:", productId);
@@ -1082,5 +1096,6 @@ function App() {
 
 // Render the App component into the root div
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
 
 
