@@ -1,5 +1,5 @@
 // Explicitly get React and ReactDOM from the global window object
-// This is crucial for compatibility with UMD bundles like lucide-react
+// This is crucial for compatibility when main.js is a regular script
 const React = window.React;
 const ReactDOM = window.ReactDOM;
 
@@ -241,7 +241,7 @@ function App() {
       companyProfileTitle: '회사 프로필',
       ceoName: '쿠로카와 치에',
       ceoBio: '쿠로카와 그룹의 회장인 쿠로카와 치에는 혁신적인 리더십과 탁월한 비전으로 유명합니다. 그의 지도 아래 회사는 기술과 고객 만족도에서 새로운 기준을 세웠습니다.',
-      companyBio: '쿠로카와 그룹은 고품질 제품과 우수한 고객 서비스를 제공하는 데 전념하는 최첨단 기업입니다. 우리는 혁신을 추진하고 고객의 삶을 풍요롭게 하는 것을 목표로 합니다.',
+      companyBio: '쿠로카와 그룹은 고품질 제품과 우수한 고객 서비스를 제공하는 데 전념하는 최첨단 기업입니다。私たちは革新を推進し、お客様の生活を豊かにすることを目指しています。',
       enterShop: '쇼핑 시작',
       productsTitle: '제품',
       addToCart: '장바구니에 추가',
@@ -727,3 +727,4 @@ function App() {
 
 // Render the App component into the root div
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
