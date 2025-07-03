@@ -19,8 +19,8 @@ const FirebaseConfigModal = ({ onClose, onSave, initialConfig, lang, translation
     projectId: "avny-ccbe9",
     storageBucket: "avny-ccbe9.firebasestorage.app",
     messagingSenderId: "686829295344",
-    appId: "1:686829295344:web:f0412dc3afa84c04701435",
-    measurementId: "G-1GT5Y7YYDD"
+    appId: "1:686829295344:web:f0928898f8af0ab3701435",
+    measurementId: "G-QQYT04PKLL"
   });
 
   const handleChange = (e) => {
