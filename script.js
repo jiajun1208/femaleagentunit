@@ -138,6 +138,9 @@ function App() {
       productShortDescription: '商品簡介', // 新增翻譯
       productDetailedDescription: '商品詳細介紹', // 新增翻譯
       backToProducts: '返回商品列表', // 新增翻譯
+      enterPassword: '請輸入密碼', // 新增翻譯
+      passwordIncorrect: '密碼錯誤，請重新輸入。', // 新增翻譯
+      submit: '提交', // 新增翻譯
     },
     en: {
       appName: 'FAU SHOPPING',
@@ -195,6 +198,9 @@ function App() {
       productShortDescription: 'Short Description', // 新增翻譯
       productDetailedDescription: 'Detailed Description', // 新增翻譯
       backToProducts: 'Back to Products', // 新增翻譯
+      enterPassword: 'Please enter password', // 新增翻譯
+      passwordIncorrect: 'Incorrect password, please try again.', // 新增翻譯
+      submit: 'Submit', // 新增翻譯
     },
     'zh-tw': {
       appName: 'FAU SHOPPING',
@@ -252,6 +258,9 @@ function App() {
       productShortDescription: '商品簡介', // 新增翻譯
       productDetailedDescription: '商品詳細介紹', // 新增翻譯
       backToProducts: '返回商品列表', // 新增翻譯
+      enterPassword: '請輸入密碼', // 新增翻譯
+      passwordIncorrect: '密碼錯誤，請重新輸入。', // 新增翻譯
+      submit: '提交', // 新增翻譯
     },
     'zh-cn': {
       appName: 'FAU SHOPPING',
@@ -333,19 +342,22 @@ function App() {
   const [productsData, setProductsData] = useState([]); // 從 Firestore 載入的商品數據
   const [isFirebaseReady, setIsFirebaseReady] = useState(false); // Firebase 是否初始化完成
   const [selectedProductId, setSelectedProductId] = useState(null); // 儲存選定商品的ID
+  const [showPasswordModal, setShowPasswordModal] = useState(false); // 控制密碼輸入框顯示
+  const [passwordInput, setPasswordInput] = useState(''); // 密碼輸入框的值
+  const [passwordError, setPasswordError] = useState(''); // 密碼錯誤訊息
 
   // 硬編碼的 Firebase 配置 (請務必替換為您自己的專案詳細資訊)
   // 您可以在 Firebase 控制台 (console.firebase.google.com) > 專案設定 (Project settings) > 您的應用程式 (Your apps) 中找到這些資訊。
   // 請確保將 'YOUR_API_KEY' 等佔位符替換為實際的值，並保留引號。
   const firebaseConfigHardcoded = {
-       apiKey: "AIzaSyCZSC4KP9r9Ia74gjhVM4hkhkCiXU6ltR4",
-       authDomain: "avny-ccbe9.firebaseapp.com",
-       databaseURL: "https://avny-ccbe9-default-rtdb.firebaseio.com",
-       projectId: "avny-ccbe9",
-       storageBucket: "avny-ccbe9.firebasestorage.app",
-       messagingSenderId: "686829295344",
-       appId: "1:686829295344:web:f0928898f8af0ab3701435",
-       measurementId: "G-QQYT04PKLL"
+      apiKey: "AIzaSyCZSC4KP9r9Ia74gjhVM4hkhkCiXU6ltR4",
+      authDomain: "avny-ccbe9.firebaseapp.com",
+      databaseURL: "https://avny-ccbe9-default-rtdb.firebaseio.com",
+      projectId: "avny-ccbe9",
+      storageBucket: "avny-ccbe9.firebasestorage.app",
+      messagingSenderId: "686829295344",
+      appId: "1:686829295344:web:f0928898f8af0ab3701435",
+      measurementId: "G-QQYT04PKLL"
   };
 
   // 載入 Firebase 配置並初始化 Firebase
@@ -505,6 +517,67 @@ function App() {
     setSelectedProductId(productId);
     setCurrentPage('productDetail');
   };
+
+  // 處理管理後台按鈕點擊，顯示密碼輸入框
+  const handleNavigateToAdmin = () => {
+    setShowPasswordModal(true);
+    setPasswordInput(''); // 清空密碼輸入框
+    setPasswordError(''); // 清空錯誤訊息
+  };
+
+  // 處理密碼提交
+  const handlePasswordSubmit = (e) => {
+    e.preventDefault();
+    const correctPassword = "JASAMI9521"; // 正確密碼
+    if (passwordInput === correctPassword) {
+      setShowPasswordModal(false); // 關閉密碼輸入框
+      setCurrentPage('admin'); // 進入管理後台
+    } else {
+      setPasswordError(translations[currentLanguage].passwordIncorrect); // 顯示錯誤訊息
+    }
+  };
+
+  // 密碼輸入框組件
+  const PasswordModal = ({ onClose, onSubmit, password, setPassword, error, lang, translations }) => (
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-800 text-white rounded-lg shadow-xl p-6 w-full max-w-sm relative">
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 text-gray-400 hover:text-white transition-colors duration-300 rounded-full p-2 bg-gray-700 hover:bg-gray-600"
+          aria-label={translations[lang].close}
+        >
+          ✖ {/* Close icon */}
+        </button>
+        <h2 className="text-2xl font-bold mb-6 text-red-400 text-center">
+          {translations[lang].enterPassword}
+        </h2>
+        <form onSubmit={onSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="adminPassword" className="sr-only">
+              {translations[lang].enterPassword}
+            </label>
+            <input
+              type="password"
+              id="adminPassword"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full p-3 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500 text-white text-lg"
+              placeholder={translations[lang].enterPassword}
+              required
+            />
+          </div>
+          {error && <p className="text-red-500 text-center text-sm">{error}</p>}
+          <button
+            type="submit"
+            className="w-full bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg text-xl font-semibold transition-colors duration-300 shadow-lg transform hover:scale-105"
+          >
+            {translations[lang].submit}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+
 
   // 購物車彈窗組件
   const CartModal = ({ cartItems, onClose, onRemoveFromCart, onCheckout, lang, translations }) => {
@@ -1175,7 +1248,7 @@ function App() {
           onCategoryChange={setSelectedCategory}
           selectedCategory={selectedCategory}
           onViewIntro={() => setCurrentPage('intro')}
-          onNavigateToAdmin={() => setCurrentPage('admin')} // 新增導航到管理後台
+          onNavigateToAdmin={handleNavigateToAdmin} // 使用新的處理函數
           onProductClick={handleProductClick} // 傳遞商品點擊處理函數
         />
       )}
@@ -1217,6 +1290,18 @@ function App() {
             setIsCartOpen(false); // 關閉購物車彈窗
             setCurrentPage('checkout'); // 導航到結帳頁面
           }}
+          lang={currentLanguage}
+          translations={translations}
+        />
+      )}
+
+      {showPasswordModal && (
+        <PasswordModal
+          onClose={() => setShowPasswordModal(false)}
+          onSubmit={handlePasswordSubmit}
+          password={passwordInput}
+          setPassword={setPasswordInput}
+          error={passwordError}
           lang={currentLanguage}
           translations={translations}
         />
