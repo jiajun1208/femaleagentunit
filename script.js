@@ -6,9 +6,8 @@ const ReactDOM = window.ReactDOM;
 // Now destructure from the React object
 const { useState, useEffect } = React;
 
-// Lucide Icons are globally available via UMD build linked in index.html
-// Access them directly from the global 'lucideReact' object
-const { ShoppingCart, ChevronRight, User, Building, X, Info, ArrowLeft, Settings } = lucideReact;
+// Lucide Icons REMOVED - using text/emojis instead
+// const { ShoppingCart, ChevronRight, User, Building, X, Info, ArrowLeft, Settings } = lucideReact; // This line was causing the ReferenceError
 
 // 全局 Firebase 實例 (如果成功初始化)
 let firebaseApp = null;
