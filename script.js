@@ -336,14 +336,15 @@ function App() {
 
   // 硬編碼的 Firebase 配置 (請替換為您自己的專案詳細資訊)
   const firebaseConfigHardcoded = {
-      apiKey: "YOUR_API_KEY", // <-- 請務必替換為您 Firebase 專案的實際 API Key
-      authDomain: "YOUR_AUTH_DOMAIN", // <-- 請務必替換為您 Firebase 專案的實際 Auth Domain
-      projectId: "YOUR_PROJECT_ID", // <-- 請務必替換為您 Firebase 專案的實際 Project ID
-      storageBucket: "YOUR_STORAGE_BUCKET", // <-- 請務必替換為您 Firebase 專案的實際 Storage Bucket
-      messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // <-- 請務必替換為您 Firebase 專案的實際 Messaging Sender ID
-      appId: "YOUR_APP_ID", // <-- 請務必替換為您 Firebase 專案的實際 App ID
-      measurementId: "YOUR_MEASUREMENT_ID" // 可選，請務必替換為您 Firebase 專案的實際 Measurement ID
-  };
+      apiKey: "AIzaSyCZSC4KP9r9Ia74gjhVM4hkhkCiXU6ltR4",
+      authDomain: "avny-ccbe9.firebaseapp.com",
+      databaseURL: "https://avny-ccbe9-default-rtdb.firebaseio.com",
+      projectId: "avny-ccbe9",
+      storageBucket: "avny-ccbe9.firebasestorage.app",
+      messagingSenderId: "686829295344",
+      appId: "1:686829295344:web:f0928898f8af0ab3701435",
+      measurementId: "G-QQYT04PKLL"
+  } ;
 
   // 載入 Firebase 配置並初始化 Firebase
   useEffect(() => {
