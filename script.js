@@ -9,7 +9,7 @@ const { useState, useEffect } = React;
 let firebaseApp = null;
 let db = null;
 let auth = null;
-let storage = null; // 新增 Firebase Storage 實例
+// let storage = null; // Firebase Storage 實例已移除
 
 // Gemini API 翻譯函數
 async function translateText(text, targetLang, sourceLang = 'auto') {
@@ -172,7 +172,7 @@ function App() {
       enterPassword: 'パスワードを入力してください',
       passwordIncorrect: 'パスワードが間違っています。もう一度入力してください。',
       submit: '送信',
-      uploadingImage: '画像をアップロード中...', // 新增翻譯
+      // uploadingImage: '画像をアップロード中...', // 已移除
     },
     en: {
       appName: 'FAU SHOPPING',
@@ -233,7 +233,7 @@ function App() {
       enterPassword: 'Please enter password',
       passwordIncorrect: 'Incorrect password, please try again.',
       submit: 'Submit',
-      uploadingImage: 'Uploading image...', // 新增翻譯
+      // uploadingImage: 'Uploading image...', // 已移除
     },
     'zh-tw': {
       appName: 'FAU SHOPPING',
@@ -294,7 +294,7 @@ function App() {
       enterPassword: '請輸入密碼',
       passwordIncorrect: '密碼錯誤，請重新輸入。',
       submit: '提交',
-      uploadingImage: '正在上傳圖片...', // 新增翻譯
+      // uploadingImage: '正在上傳圖片...', // 已移除
     },
     'zh-cn': {
       appName: 'FAU SHOPPING',
@@ -338,7 +338,7 @@ function App() {
       ceoBio: '쿠로카와 그룹의 회장인 쿠로카와 치에는 혁신적인 리더십과 탁월한 비전으로 유명합니다. 그의 지도 아래 회사는 기술과 고객 만족도에서 새로운 기준을 세웠습니다.',
       companyCompany: '쿠로카와 그룹은 고품질 제품과 우수한 고객 서비스를 제공하는 데 전념하는 최첨단 기업입니다。私たちは革新を推進し、お客様の生活を豊かにすることを目指しています。',
       enterShop: '쇼핑 시작',
-      productsTitle: '제품',
+      productsTitle: '製品',
       addToCart: '장바구니에 추가',
       viewCart: '장바구니 보기',
       cartTitle: '장바구니',
@@ -434,7 +434,7 @@ function App() {
       firebaseApp = window.firebase.initializeApp(configToUse);
       db = window.firebase.getFirestore(firebaseApp);
       auth = window.firebase.getAuth(firebaseApp);
-      storage = window.firebase.getStorage(firebaseApp); // 初始化 Firebase Storage
+      // storage = window.firebase.getStorage(firebaseApp); // 已移除 Firebase Storage 初始化
       console.log("App useEffect: Firebase initialized successfully. Attempting anonymous sign-in...");
       
       window.firebase.signInAnonymously(auth).then(userCredential => {
@@ -982,30 +982,30 @@ function App() {
     const [editingProduct, setEditingProduct] = useState(null); // null for add, product object for edit
     const [name, setName] = useState('');
     const [price, setPrice] = useState('');
-    const [imageURL, setImageURL] = useState(''); // 用於顯示圖片 URL
-    const [imageFile, setImageFile] = useState(null); // 用於儲存選擇的圖片檔案
+    const [image, setImage] = useState(''); // 圖片 URL
+    // const [imageFile, setImageFile] = useState(null); // 已移除圖片檔案狀態
     const [category, setCategory] = useState('催眠類'); // Default category (original value)
     const [shortDescription, setShortDescription] = useState(''); // 新增簡介狀態
     const [detailedDescription, setDetailedDescription] = useState(''); // 新增詳細介紹狀態
     const [message, setMessage] = useState(''); // Feedback message
     const [isTranslating, setIsTranslating] = useState(false); // 新增翻譯狀態
-    const [isUploadingImage, setIsUploadingImage] = useState(false); // 新增圖片上傳狀態
+    // const [isUploadingImage, setIsUploadingImage] = useState(false); // 已移除圖片上傳狀態
 
     useEffect(() => {
       if (editingProduct) {
         // 編輯時，載入當前語言的內容，如果沒有則載入日文或原始值
         setName(editingProduct.name[lang] || editingProduct.name.ja || editingProduct.name || '');
         setPrice(editingProduct.price);
-        setImageURL(editingProduct.image || ''); // 載入現有圖片 URL
-        setImageFile(null); // 清空圖片檔案選擇
+        setImage(editingProduct.image || ''); // 載入現有圖片 URL
+        // setImageFile(null); // 清空圖片檔案選擇，已移除
         setCategory(editingProduct.category); // 儲存原始分類值
         setShortDescription(editingProduct.shortDescription[lang] || editingProduct.shortDescription.ja || editingProduct.shortDescription || '');
         setDetailedDescription(editingProduct.detailedDescription[lang] || editingProduct.detailedDescription.ja || editingProduct.detailedDescription || '');
       } else {
         setName('');
         setPrice('');
-        setImageURL('');
-        setImageFile(null);
+        setImage('');
+        // setImageFile(null); // 已移除
         setCategory('催眠類'); // 預設分類為原始日文值
         setShortDescription('');
         setDetailedDescription('');
@@ -1017,54 +1017,54 @@ function App() {
       setTimeout(() => setMessage(''), 3000);
     };
 
-    const handleFileChange = (e) => {
-      if (e.target.files[0]) {
-        setImageFile(e.target.files[0]);
-        setImageURL(URL.createObjectURL(e.target.files[0])); // 預覽圖片
-      } else {
-        setImageFile(null);
-        setImageURL('');
-      }
-    };
+    // const handleFileChange = (e) => { // 已移除
+    //   if (e.target.files[0]) {
+    //     setImageFile(e.target.files[0]);
+    //     setImage(URL.createObjectURL(e.target.files[0])); // 預覽圖片
+    //   } else {
+    //     setImageFile(null);
+    //     setImage('');
+    //   }
+    // };
 
     const handleAddOrUpdateProduct = async (e) => {
       e.preventDefault();
-      if (!db || !storage) {
-        console.error("AdminPage: Firestore or Storage is not initialized.");
-        showMessage("Firestore 或 Storage 未初始化，無法操作。請檢查 Firebase 設定。");
+      if (!db) {
+        console.error("AdminPage: Firestore is not initialized.");
+        showMessage("Firestore 未初始化，無法操作。請檢查 Firebase 設定。");
         return;
       }
 
       setIsTranslating(true); // 開始翻譯，顯示載入狀態
       showMessage("正在翻譯商品資訊...");
 
-      let finalImageUrl = imageURL; // 預設使用現有的圖片 URL
+      // let finalImageUrl = image; // 預設使用現有的圖片 URL，已移除圖片上傳邏輯
 
-      // 如果有選擇新的圖片檔案，則上傳
-      if (imageFile) {
-        setIsUploadingImage(true);
-        showMessage(translations[lang].uploadingImage);
-        try {
-          const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-          const storageRef = window.firebase.ref(storage, `artifacts/${appId}/public/images/${imageFile.name}`);
-          const uploadTask = await window.firebase.uploadBytes(storageRef, imageFile);
-          finalImageUrl = await window.firebase.getDownloadURL(uploadTask.ref);
-          console.log("Image uploaded successfully:", finalImageUrl);
-          showMessage("圖片上傳成功！");
-        } catch (error) {
-          console.error("Error uploading image:", error);
-          showMessage("圖片上傳失敗：" + error.message);
-          setIsUploadingImage(false);
-          setIsTranslating(false);
-          return; // 圖片上傳失敗，停止後續操作
-        } finally {
-          setIsUploadingImage(false);
-        }
-      }
+      // // 如果有選擇新的圖片檔案，則上傳，已移除
+      // if (imageFile) {
+      //   setIsUploadingImage(true);
+      //   showMessage(translations[lang].uploadingImage);
+      //   try {
+      //     const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+      //     const storageRef = window.firebase.ref(storage, `artifacts/${appId}/public/images/${imageFile.name}`);
+      //     const uploadTask = await window.firebase.uploadBytes(storageRef, imageFile);
+      //     finalImageUrl = await window.firebase.getDownloadURL(uploadTask.ref);
+      //     console.log("Image uploaded successfully:", finalImageUrl);
+      //     showMessage("圖片上傳成功！");
+      //   } catch (error) {
+      //     console.error("Error uploading image:", error);
+      //     showMessage("圖片上傳失敗：" + error.message);
+      //     setIsUploadingImage(false);
+      //     setIsTranslating(false);
+      //     return; // 圖片上傳失敗，停止後續操作
+      //   } finally {
+      //     setIsUploadingImage(false);
+      //   }
+      // }
 
       const productData = {
         price: parseFloat(price),
-        image: finalImageUrl, // 使用最終的圖片 URL
+        image: image, // 使用圖片 URL
         category, // 儲存原始分類值
         name: {}, // 將儲存所有語言的翻譯
         shortDescription: {}, // 將儲存所有語言的翻譯
@@ -1101,8 +1101,8 @@ function App() {
         setEditingProduct(null); // Clear form
         setName('');
         setPrice('');
-        setImageURL('');
-        setImageFile(null);
+        setImage('');
+        // setImageFile(null); // 已移除
         setCategory('催眠類'); // 重置為原始日文值
         setShortDescription('');
         setDetailedDescription('');
@@ -1174,11 +1174,12 @@ function App() {
             </div>
           )}
 
-          {isUploadingImage && (
+          {/* isUploadingImage 相關的訊息已移除 */}
+          {/* {isUploadingImage && (
             <div className="bg-yellow-700 text-white text-center py-3 px-6 rounded-lg mb-6 text-lg font-semibold shadow-lg animate-pulse">
               {translations[lang].uploadingImage}
             </div>
-          )}
+          )} */}
 
           {/* 新增/編輯商品表單 */}
           <form onSubmit={handleAddOrUpdateProduct} className="bg-gray-900 p-6 rounded-xl shadow-lg mb-8 border border-purple-800">
@@ -1214,7 +1215,8 @@ function App() {
                 />
               </div>
               <div className="md:col-span-2">
-                <label htmlFor="productImageFile" className="block text-gray-300 text-sm font-semibold mb-1">
+                {/* 圖片檔案上傳欄位已移除 */}
+                {/* <label htmlFor="productImageFile" className="block text-gray-300 text-sm font-semibold mb-1">
                   選擇圖片檔案 (優先上傳):
                 </label>
                 <input
@@ -1223,24 +1225,25 @@ function App() {
                   accept="image/*"
                   onChange={handleFileChange}
                   className="w-full p-3 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500 text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100"
-                />
-                {imageURL && (
+                /> */}
+                {image && ( // 判斷是否有圖片 URL 才顯示預覽
                   <div className="mt-4">
                     <p className="text-gray-400 text-sm mb-2">圖片預覽 / 現有圖片URL:</p>
-                    <img src={imageURL} alt="Product Preview" className="max-w-xs h-auto rounded-md shadow-md" />
-                    <p className="text-gray-500 text-xs break-all mt-2">{imageURL}</p>
+                    <img src={image} alt="Product Preview" className="max-w-xs h-auto rounded-md shadow-md" />
+                    <p className="text-gray-500 text-xs break-all mt-2">{image}</p>
                   </div>
                 )}
                 <label htmlFor="productImageURL" className="block text-gray-300 text-sm font-semibold mb-1 mt-4">
-                  或輸入圖片URL (如果未選擇檔案):
+                  {translations[lang].productImage}:
                 </label>
                 <input
                   type="url"
                   id="productImageURL"
-                  value={imageURL}
-                  onChange={(e) => { setImageURL(e.target.value); setImageFile(null); }} // 如果手動輸入URL，則清空檔案選擇
+                  value={image}
+                  onChange={(e) => { setImage(e.target.value); }} // 只更新圖片 URL
                   className="w-full p-3 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
                   placeholder="https://example.com/image.jpg"
+                  required // 圖片 URL 仍為必填
                 />
               </div>
               <div className="md:col-span-2">
@@ -1292,7 +1295,7 @@ function App() {
               <button
                 type="submit"
                 className="bg-red-600 hover:bg-red-500 text-white px-6 py-3 rounded-full font-semibold transition-colors duration-300 shadow-lg transform hover:scale-105"
-                disabled={isTranslating || isUploadingImage} // 翻譯或上傳中禁用按鈕
+                disabled={isTranslating} // 翻譯中禁用按鈕
               >
                 {translations[lang].save}
               </button>
@@ -1301,7 +1304,7 @@ function App() {
                   type="button"
                   onClick={() => setEditingProduct(null)}
                   className="bg-gray-700 hover:bg-gray-600 text-gray-300 px-6 py-3 rounded-full font-semibold transition-colors duration-300 shadow-md"
-                  disabled={isTranslating || isUploadingImage} // 翻譯或上傳中禁用按鈕
+                  disabled={isTranslating} // 翻譯中禁用按鈕
                 >
                   {translations[lang].cancel}
                 </button>
@@ -1455,3 +1458,4 @@ function App() {
 
 // Render the App component into the root div
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
