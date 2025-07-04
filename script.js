@@ -405,9 +405,7 @@ function App() {
   // 廣告影片輪播相關狀態
   const adVideoUrls = useRef([
       'https://www.youtube.com/watch?v=r7iAasYwWT4', // 範例 YouTube 影片 1
-      'https://www.youtube.com/watch?v=-Sren30xpwY', // 範例 YouTube 影片 2
-      'https://www.youtube.com/watch?v=r7iAasYwWT4', // 範例 YouTube 影片 3
-      'https://raw.githubusercontent.com/mdn/learning-area/main/html/multimedia-and-embedding/video-and-audio-content/rabbit320.mp4' // 範例 MP4 影片
+      'https://www.youtube.com/watch?v=83x093Aq4Kk', // 範例 YouTube 影片 2
   ]);
   const [currentAdVideoIndex, setCurrentAdVideoIndex] = useState(0);
 
