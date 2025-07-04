@@ -357,7 +357,7 @@ function App() {
       ceoBio: '쿠로카와 그룹의 회장인 쿠로카와 치에는 혁신적인 리더십과 탁월한 비전으로 유명합니다. 그의 지도 아래 회사는 기술과 고객 만족도에서 새로운 기준을 세웠습니다.',
       companyCompany: '쿠로카와 그룹은 고품질 제품과 우수한 고객 서비스를 제공하는 데 전념하는 최첨단 기업입니다。私たちは革新を推進し、お客様の生活を豊かにすることを目指しています。',
       enterShop: '쇼핑 시작',
-      productsTitle: '製品',
+      productsTitle: '제품',
       addToCart: '장바구니에 추가',
       viewCart: '장바구니 보기',
       cartTitle: '장바구니',
@@ -400,10 +400,9 @@ function App() {
   const [passwordError, setPasswordError] = useState(''); // 密碼錯誤訊息
 
   // 新增影片 URL 狀態
-  // 請將這些 URL 替換為您在 GitHub 上的原始影片連結
+  // 請將這些 URL 替換為您在 GitHub 上的原始影片連結或 YouTube 連結
   const [ceoVideoUrl, setCeoVideoUrl] = useState('https://raw.githubusercontent.com/jiajun1208/femaleagentunit/main/video/CEO.mp4'); // 示例影片，請替換
-  const [adVideoUrl, setAdVideoUrl] = useState('https://www.youtube.com/watch?v=r7iAasYwWT4'); // 示例影片，請替換
-
+  const [adVideoUrl, setAdVideoUrl] = useState('https://www.youtube.com/watch?v=dQw4w9WgXcQ'); // 示例 YouTube 影片，請替換
 
   // 硬編碼的 Firebase 配置 (請務必替換為您自己的專案詳細資訊)
   // 您可以在 Firebase 控制台 (console.firebase.google.com) > 專案設定 (Project settings) > 您的應用程式 (Your apps) 中找到這些資訊。
@@ -785,117 +784,141 @@ function App() {
     </div>
   );
 
+  // 輔助函數：判斷是否為 YouTube 連結並提取 ID
+  const getYouTubeVideoId = (url) => {
+    const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+    const match = url.match(youtubeRegex);
+    return match ? match[1] : null;
+  };
+
   // 購物頁面組件
-  const ShopPage = ({ products, onAddToCart, cartCount, onViewCart, lang, translations, onCategoryChange, selectedCategory, onViewIntro, onNavigateToAdmin, onProductClick, adVideoUrl }) => ( // 傳遞 adVideoUrl
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-purple-900 text-white flex flex-col">
-      {/* 頂部導航欄 */}
-      <header className="w-full bg-gray-900 p-4 shadow-xl flex items-center justify-center relative">
-        {/* 網站名稱居中 */}
-        <h1 className="text-3xl font-extrabold text-red-400">
-          {translations[lang].appName}
-        </h1>
+  const ShopPage = ({ products, onAddToCart, cartCount, onViewCart, lang, translations, onCategoryChange, selectedCategory, onViewIntro, onNavigateToAdmin, onProductClick, adVideoUrl }) => { // 傳遞 adVideoUrl
+    const youtubeVideoId = getYouTubeVideoId(adVideoUrl);
+    const isYouTubeAd = youtubeVideoId !== null;
 
-        {/* 右側按鈕組 */}
-        <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center space-x-4">
-          {/* 管理後台按鈕 */}
-          <button
-            onClick={onNavigateToAdmin}
-            className="bg-purple-700 hover:bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-300 shadow-md flex items-center space-x-2"
-          >
-            ⚙️ {/* Settings icon */}
-            <span>{translations[lang].adminPanel}</span>
-          </button>
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-purple-900 text-white flex flex-col">
+        {/* 頂部導航欄 */}
+        <header className="w-full bg-gray-900 p-4 shadow-xl flex items-center justify-center relative">
+          {/* 網站名稱居中 */}
+          <h1 className="text-3xl font-extrabold text-red-400">
+            {translations[lang].appName}
+          </h1>
 
-          {/* 簡介按鈕 */}
-          <button
-            onClick={onViewIntro}
-            className="bg-purple-700 hover:bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-300 shadow-md flex items-center space-x-2"
-          >
-            ℹ️ {/* Info icon */}
-            <span>{translations[lang].aboutUs}</span>
-          </button>
-
-          {/* 語言切換按鈕 */}
-          <button
-            onClick={handleLanguageChange}
-            className="bg-purple-700 hover:bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-300 shadow-md"
-          >
-            {translations[lang].languageOptions[lang]}
-          </button>
-
-          {/* 購物車按鈕 */}
-          <button
-            onClick={onViewCart}
-            className="relative bg-red-700 hover:bg-red-600 text-white p-3 rounded-full shadow-md transform hover:scale-105 transition-transform duration-300"
-            aria-label={translations[lang].viewCart}
-          >
-            🛒 {/* ShoppingCart icon */}
-            {cartCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-purple-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                {cartCount}
-              </span>
-            )}
-          </button>
-        </div>
-      </header>
-
-      {/* 廣告影片欄位 */}
-      {adVideoUrl && (
-        <div className="w-full bg-gray-800 p-4 md:p-6 lg:p-8 shadow-inner border-b border-purple-700 text-center">
-          <h2 className="text-2xl font-bold text-purple-400 mb-4">{translations[lang].advertisement}</h2>
-          <div className="relative w-full max-w-4xl mx-auto aspect-video rounded-xl overflow-hidden shadow-2xl border-2 border-red-500">
-            <video
-              className="w-full h-full object-cover"
-              src={adVideoUrl}
-              controls
-              autoPlay
-              loop
-              muted
-              playsInline
-              title="Advertisement Video"
+          {/* 右側按鈕組 */}
+          <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center space-x-4">
+            {/* 管理後台按鈕 */}
+            <button
+              onClick={onNavigateToAdmin}
+              className="bg-purple-700 hover:bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-300 shadow-md flex items-center space-x-2"
             >
-              您的瀏覽器不支持影片標籤。
-            </video>
-          </div>
-        </div>
-      )}
+              ⚙️ {/* Settings icon */}
+              <span>{translations[lang].adminPanel}</span>
+            </button>
 
-      {/* 主要內容區域 */}
-      <main className="flex-grow p-6 md:p-8 lg:p-10">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-          <h2 className="text-4xl font-extrabold text-red-400">{translations[lang].productsTitle}</h2>
-          <div className="flex items-center space-x-4">
-            {/* 商品分類篩選 */}
-            <select
-              value={selectedCategory}
-              onChange={(e) => onCategoryChange(e.target.value)}
-              className="bg-gray-700 text-white rounded-full px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-md"
+            {/* 簡介按鈕 */}
+            <button
+              onClick={onViewIntro}
+              className="bg-purple-700 hover:bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-300 shadow-md flex items-center space-x-2"
             >
-              <option value="all">{translations[lang].allCategories}</option>
-              {/* 使用翻譯後的分類名稱顯示，但值仍為原始日文，方便過濾 */}
-              <option value="催眠類">{translations[lang].categoryHypnosis}</option>
-              <option value="憑依用">{translations[lang].categoryPossession}</option>
-              <option value="TSF用">{translations[lang].categoryTSF}</option>
-              <option value="武装用">{translations[lang].categoryAgentGear}</option>
-            </select>
-          </div>
-        </div>
+              ℹ️ {/* Info icon */}
+              <span>{translations[lang].aboutUs}</span>
+            </button>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {products.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              onAddToCart={addToCart} // Pass addToCart directly
-              lang={lang}
-              translations={translations}
-              onProductClick={handleProductClick} // 傳遞點擊處理函數
-            />
-          ))}
-        </div>
-      </main>
-    </div>
-  );
+            {/* 語言切換按鈕 */}
+            <button
+              onClick={handleLanguageChange}
+              className="bg-purple-700 hover:bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-300 shadow-md"
+            >
+              {translations[lang].languageOptions[lang]}
+            </button>
+
+            {/* 購物車按鈕 */}
+            <button
+              onClick={onViewCart}
+              className="relative bg-red-700 hover:bg-red-600 text-white p-3 rounded-full shadow-md transform hover:scale-105 transition-transform duration-300"
+              aria-label={translations[lang].viewCart}
+            >
+              🛒 {/* ShoppingCart icon */}
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-purple-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                  {cartCount}
+                </span>
+              )}
+            </button>
+          </div>
+        </header>
+
+        {/* 廣告影片欄位 */}
+        {adVideoUrl && (
+          <div className="w-full bg-gray-800 p-4 md:p-6 lg:p-8 shadow-inner border-b border-purple-700 text-center">
+            <h2 className="text-2xl font-bold text-purple-400 mb-4">{translations[lang].advertisement}</h2>
+            <div className="relative w-full max-w-4xl mx-auto aspect-video rounded-xl overflow-hidden shadow-2xl border-2 border-red-500">
+              {isYouTubeAd ? (
+                <iframe
+                  className="w-full h-full"
+                  src={`https://www.youtube.com/embed/$${youtubeVideoId}?autoplay=1&mute=1&loop=1&playlist=${youtubeVideoId}&controls=1&modestbranding=1`}
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  title="YouTube Advertisement Video"
+                  loading="lazy"
+                ></iframe>
+              ) : (
+                <video
+                  className="w-full h-full object-cover"
+                  src={adVideoUrl}
+                  controls
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  title="Advertisement Video"
+                >
+                  您的瀏覽器不支持影片標籤。
+                </video>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 主要內容區域 */}
+        <main className="flex-grow p-6 md:p-8 lg:p-10">
+          <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+            <h2 className="text-4xl font-extrabold text-red-400">{translations[lang].productsTitle}</h2>
+            <div className="flex items-center space-x-4">
+              {/* 商品分類篩選 */}
+              <select
+                value={selectedCategory}
+                onChange={(e) => onCategoryChange(e.target.value)}
+                className="bg-gray-700 text-white rounded-full px-4 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-md"
+              >
+                <option value="all">{translations[lang].allCategories}</option>
+                {/* 使用翻譯後的分類名稱顯示，但值仍為原始日文，方便過濾 */}
+                <option value="催眠類">{translations[lang].categoryHypnosis}</option>
+                <option value="憑依用">{translations[lang].categoryPossession}</option>
+                <option value="TSF用">{translations[lang].categoryTSF}</option>
+                <option value="武装用">{translations[lang].categoryAgentGear}</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {products.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onAddToCart={addToCart} // Pass addToCart directly
+                lang={lang}
+                translations={translations}
+                onProductClick={handleProductClick} // 傳遞點擊處理函數
+              />
+            ))}
+          </div>
+        </main>
+      </div>
+    );
+  };
 
   // 結帳頁面組件
   const CheckoutPage = ({ cartItems, onBackToShop, lang, translations }) => {
@@ -1009,7 +1032,7 @@ function App() {
             <div key={`youtube-${lineIndex}-${match.index}`} className="my-2 aspect-video w-full max-w-full mx-auto rounded-lg overflow-hidden shadow-xl">
               <iframe
                 className="w-full h-full"
-                src={`https://www.youtube.com/embed/${videoId}`}
+                src={`https://www.youtube.com/embed/$${videoId}`}
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
@@ -1589,3 +1612,4 @@ function App() {
 
 // Render the App component into the root div
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
