@@ -3,13 +3,12 @@ const React = window.React;
 const ReactDOM = window.ReactDOM;
 
 // Now destructure from the React object
-const { useState, useEffect } = React;
+const { useState, useEffect, useRef } = React; // Import useRef
 
 // 全局 Firebase 實例 (如果成功初始化)
 let firebaseApp = null;
 let db = null;
 let auth = null;
-// Firebase Storage 實例已移除，因為用戶不需要該功能
 
 // Gemini API 翻譯函數
 async function translateText(text, targetLang, sourceLang = 'auto') {
@@ -51,8 +50,6 @@ async function translateText(text, targetLang, sourceLang = 'auto') {
     }
   } catch (error) {
     console.error("TranslateText: Error during translation API call:", error);
-    // 在這裡不直接顯示用戶訊息，因為會被 AdminPage 的 message 覆蓋，
-    // 讓 AdminPage 統一處理翻譯失敗的訊息。
     return text; // 錯誤時返回原始文字
   }
 }
@@ -157,10 +154,10 @@ function App() {
       },
       productDescription: '高品質な素材で作られた、モダンでスタイリッシュな製品。',
       allCategories: '全商品',
-      categoryHypnosis: '催眠用', // 更新為「催眠用」
-      categoryPossession: '憑依用', // 更新為「憑依用」
-      categoryTSF: 'TSF用', // 更新為「TSF用」
-      categoryAgentGear: '武装用', // 更新為「武装用」
+      categoryHypnosis: '催眠用',
+      categoryPossession: '憑依用',
+      categoryTSF: 'TSF用',
+      categoryAgentGear: '武装用',
       aboutUs: '会社情報',
       backToShop: 'ショップに戻る',
       placeOrder: '注文を確定する',
@@ -188,8 +185,8 @@ function App() {
       enterPassword: 'パスワードを入力してください',
       passwordIncorrect: 'パスワードが間違っています。もう一度入力してください。',
       submit: '送信',
-      translationFailed: '翻譯失敗，請檢查網路連線或稍後再試。', // 新增翻譯失敗訊息
-      advertisement: '廣告', // 新增廣告翻譯
+      translationFailed: '翻譯失敗，請檢查網路連線或稍後再試。',
+      advertisement: '廣告',
     },
     en: {
       appName: 'FAU SHOPPING',
@@ -219,10 +216,10 @@ function App() {
       },
       productDescription: 'A modern and stylish product made with high-quality materials.',
       allCategories: 'All Categories',
-      categoryHypnosis: 'For Hypnosis', // 更新翻譯
-      categoryPossession: 'For Possession', // 更新翻譯
-      categoryTSF: 'For TSF', // 更新翻譯
-      categoryAgentGear: 'For Agent Gear', // 更新翻譯
+      categoryHypnosis: 'For Hypnosis',
+      categoryPossession: 'For Possession',
+      categoryTSF: 'For TSF',
+      categoryAgentGear: 'For Agent Gear',
       aboutUs: 'About Us',
       backToShop: 'Back to Shop',
       placeOrder: 'Place Order',
@@ -250,8 +247,8 @@ function App() {
       enterPassword: 'Please enter password',
       passwordIncorrect: 'Incorrect password, please try again.',
       submit: 'Submit',
-      translationFailed: 'Translation failed, please check network or try again later.', // 新增翻譯失敗訊息
-      advertisement: 'Advertisement', // 新增廣告翻譯
+      translationFailed: 'Translation failed, please check network or try again later.',
+      advertisement: 'Advertisement',
     },
     'zh-tw': {
       appName: 'FAU SHOPPING',
@@ -260,7 +257,7 @@ function App() {
       companyProfileTitle: '公司簡介',
       ceoName: '黑川 智慧',
       ceoBio: '黑川集團董事長黑川智慧以其創新的領導力和卓越的遠見而聞聞。在他的指導下，公司在技術和客戶滿意度方面樹立了新的標準。',
-      companyCompany: '黑川集團是一家致力於提供高品質產品和卓越客戶服務的尖端企業。我們致力於推動創新，豐富客戶的生活。',
+      companyBio: '黑川集團是一家致力於提供高品質產品和卓越客戶服務的尖端企業。我們致力於推動創新，豐富客戶的生活。',
       enterShop: '進入購物頁面',
       productsTitle: '我們的產品',
       addToCart: '加入購物車',
@@ -281,10 +278,10 @@ function App() {
       },
       productDescription: '一款採用高品質材料製成的現代時尚產品。',
       allCategories: '所有分類',
-      categoryHypnosis: '催眠用', // 更新翻譯
-      categoryPossession: '憑依用', // 更新翻譯
-      categoryTSF: 'TSF用', // 更新翻譯
-      categoryAgentGear: '武裝用', // 更新翻譯
+      categoryHypnosis: '催眠用',
+      categoryPossession: '憑依用',
+      categoryTSF: 'TSF用',
+      categoryAgentGear: '武裝用',
       aboutUs: '關於我們',
       backToShop: '返回商店',
       placeOrder: '確認下單',
@@ -312,8 +309,8 @@ function App() {
       enterPassword: '請輸入密碼',
       passwordIncorrect: '密碼錯誤，請重新輸入。',
       submit: '提交',
-      translationFailed: '翻譯失敗，請檢查網路連線或稍後再試。', // 新增翻譯失敗訊息
-      advertisement: '廣告', // 新增廣告翻譯
+      translationFailed: '翻譯失敗，請檢查網路連線或稍後再試。',
+      advertisement: '廣告',
     },
     'zh-cn': {
       appName: 'FAU SHOPPING',
@@ -343,10 +340,10 @@ function App() {
       },
       productDescription: '一款采用高质量材料制成的现代时尚产品。',
       allCategories: '所有分类',
-      categoryHypnosis: '催眠用', // 更新翻譯
-      categoryPossession: '凭依用', // 更新翻譯
-      categoryTSF: 'TSF用', // 更新翻譯
-      categoryAgentGear: '武装用', // 更新翻譯
+      categoryHypnosis: '催眠用',
+      categoryPossession: '凭依用',
+      categoryTSF: 'TSF用',
+      categoryAgentGear: '武装用',
     },
     ko: {
       appName: 'FAU SHOPPING',
@@ -355,7 +352,7 @@ function App() {
       companyProfileTitle: '회사 프로필',
       ceoName: '쿠로카와 치에',
       ceoBio: '쿠로카와 그룹의 회장인 쿠로카와 치에는 혁신적인 리더십과 탁월한 비전으로 유명합니다. 그의 지도 아래 회사는 기술과 고객 만족도에서 새로운 기준을 세웠습니다.',
-      companyCompany: '쿠로카와 그룹은 고품질 제품과 우수한 고객 서비스를 제공하는 데 전념하는 최첨단 기업입니다。私たちは革新を推進し、お客様の生活を豊かにすることを目指しています。',
+      companyBio: '쿠로카와 그룹은 고품질 제품과 우수한 고객 서비스를 제공하는 데 전념하는 최첨단 기업입니다。私たちは革新を推進し、お客様の生活を豊かにすることを目指しています。',
       enterShop: '쇼핑 시작',
       productsTitle: '제품',
       addToCart: '장바구니에 추가',
@@ -376,10 +373,10 @@ function App() {
       },
       productDescription: '고품질 소재로 제작된 현대적이고 세련된 제품입니다。',
       allCategories: '모든 카테고리',
-      categoryHypnosis: '최면용', // 更新翻譯
-      categoryPossession: '빙의용', // 更新翻譯
-      categoryTSF: 'TSF용', // 更新翻譯
-      categoryAgentGear: '무장용', // 更新翻譯
+      categoryHypnosis: '최면용',
+      categoryPossession: '빙의용',
+      categoryTSF: 'TSF용',
+      categoryAgentGear: '무장용',
     },
   };
 
@@ -400,9 +397,16 @@ function App() {
   const [passwordError, setPasswordError] = useState(''); // 密碼錯誤訊息
 
   // 新增影片 URL 狀態
-  // 請將這些 URL 替換為您在 GitHub 上的原始影片連結或 YouTube 連結
   const [ceoVideoUrl, setCeoVideoUrl] = useState('https://raw.githubusercontent.com/jiajun1208/femaleagentunit/main/video/CEO.mp4'); // 示例影片，請替換
-  const [adVideoUrl, setAdVideoUrl] = useState('https://www.youtube.com/watch?v=r7iAasYwWT4'); // 示例 YouTube 影片，請替換
+
+  // 廣告影片輪播相關狀態
+  const adVideoUrls = useRef([
+      'https://www.youtube.com/watch?v=r7iAasYwWT4', // 範例 YouTube 影片 1
+      'https://www.youtube.com/watch?v=-Sren30xpwY', // 範例 YouTube 影片 2
+      'http://googleusercontent.com/youtube.com/7', // 範例 YouTube 影片 3
+      'https://raw.githubusercontent.com/mdn/learning-area/main/html/multimedia-and-embedding/video-and-audio-content/rabbit320.mp4' // 範例 MP4 影片
+  ]);
+  const [currentAdVideoIndex, setCurrentAdVideoIndex] = useState(0);
 
   // 硬編碼的 Firebase 配置 (請務必替換為您自己的專案詳細資訊)
   // 您可以在 Firebase 控制台 (console.firebase.google.com) > 專案設定 (Project settings) > 您的應用程式 (Your apps) 中找到這些資訊。
@@ -458,7 +462,6 @@ function App() {
       firebaseApp = window.firebase.initializeApp(configToUse);
       db = window.firebase.getFirestore(firebaseApp);
       auth = window.firebase.getAuth(firebaseApp);
-      // storage = window.firebase.getStorage(firebaseApp); // 已移除 Firebase Storage 初始化
       console.log("App useEffect: Firebase initialized successfully. Attempting anonymous sign-in...");
       
       window.firebase.signInAnonymously(auth).then(userCredential => {
@@ -514,8 +517,6 @@ function App() {
         console.log("Products useEffect: Products fetched from Firestore:", productsList);
       }, (error) => {
         console.error("Products useEffect: Error fetching products from Firestore:", error);
-        // 如果獲取失敗，可以顯示錯誤訊息給用戶
-        // setMessage("載入商品失敗：" + error.message);
       });
 
       // 清理訂閱
@@ -529,6 +530,17 @@ function App() {
         console.log("Products useEffect: Firebase not ready, skipping product fetch.");
     }
   }, [isFirebaseReady, db]); // 依賴於 Firebase 是否準備好和 db 實例
+
+  // 廣告影片輪播效果
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentAdVideoIndex((prevIndex) =>
+        (prevIndex + 1) % adVideoUrls.current.length
+      );
+    }, 10000); // 每 10 秒切換一次影片
+
+    return () => clearInterval(interval); // 清理定時器
+  }, []);
 
   // 語言切換邏輯
   const handleLanguageChange = () => {
@@ -1155,7 +1167,6 @@ function App() {
     const [detailedDescription, setDetailedDescription] = useState(''); // 新增詳細介紹狀態
     const [message, setMessage] = useState(''); // Feedback message
     const [isTranslating, setIsTranslating] = useState(false); // 新增翻譯狀態
-    // isUploadingImage 狀態已移除
 
     useEffect(() => {
       if (editingProduct) {
@@ -1302,7 +1313,6 @@ function App() {
           <div className="bg-gray-800 p-8 rounded-lg shadow-xl text-center">
             <p className="text-xl text-red-400">{translations[lang].fetchingProducts}</p>
             <p className="text-gray-400 mt-2">請確保 Firebase 配置已儲存並重新載入頁面。</p>
-            {/* Firebase 設定按鈕已移除 */}
           </div>
         </div>
       );
@@ -1535,9 +1545,9 @@ function App() {
           onCategoryChange={setSelectedCategory}
           selectedCategory={selectedCategory}
           onViewIntro={() => setCurrentPage('intro')}
-          onNavigateToAdmin={handleNavigateToAdmin} // 使用新的處理函數
-          onProductClick={handleProductClick} // 傳遞商品點擊處理函數
-          adVideoUrl={adVideoUrl} // 傳遞廣告影片 URL
+          onNavigateToAdmin={handleNavigateToAdmin}
+          onProductClick={handleProductClick}
+          adVideoUrl={adVideoUrls.current[currentAdVideoIndex]} // 使用當前輪播的影片 URL
         />
       )}
       {currentPage === 'checkout' && (
@@ -1550,13 +1560,12 @@ function App() {
       )}
       {currentPage === 'admin' && (
         <AdminPage
-          products={productsData} // 傳遞從 Firestore 獲取的商品數據
+          products={productsData}
           lang={currentLanguage}
           translations={translations}
           onBackToShop={() => setCurrentPage('shop')}
           isFirebaseReady={isFirebaseReady}
-          currentLanguage={currentLanguage} // 傳遞 currentLanguage
-          // onShowFirebaseConfig={() => setShowFirebaseConfigModal(true)} // 此行已移除
+          currentLanguage={currentLanguage}
         />
       )}
       {currentPage === 'productDetail' && (
@@ -1576,8 +1585,8 @@ function App() {
           onClose={() => setIsCartOpen(false)}
           onRemoveFromCart={removeFromCart}
           onCheckout={() => {
-            setIsCartOpen(false); // 關閉購物車彈窗
-            setCurrentPage('checkout'); // 導航到結帳頁面
+            setIsCartOpen(false);
+            setCurrentPage('checkout');
           }}
           lang={currentLanguage}
           translations={translations}
@@ -1595,21 +1604,11 @@ function App() {
           translations={translations}
         />
       )}
-
-      {/* Firebase 設定彈窗現在只能由程式碼內部邏輯觸發，無法從 UI 訪問 */}
-      {/* {showFirebaseConfigModal && (
-        <FirebaseConfigModal
-          onClose={() => setShowFirebaseConfigModal(false)}
-          onSave={handleSaveFirebaseConfig}
-          initialConfig={firebaseConfig}
-          lang={currentLanguage}
-          translations={translations}
-        />
-      )} */}
     </div>
   );
 }
 
 // Render the App component into the root div
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
 
