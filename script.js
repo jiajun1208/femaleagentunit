@@ -291,6 +291,35 @@ function App() {
       categoryPossession: '凭依用',
       categoryTSF: 'TSF用',
       categoryAgentGear: '武装用',
+      aboutUs: '关于我们',
+      backToShop: '返回商店',
+      placeOrder: '确认下单',
+      orderSuccess: '感谢您的订单！',
+      firebaseSettings: 'Firebase 设置',
+      adminPanel: '管理后台',
+      addProduct: '新增商品',
+      editProduct: '编辑商品',
+      deleteProduct: '删除商品',
+      productName: '商品名称',
+      productPrice: '商品价格',
+      productImage: '商品图片URL',
+      productCategory: '商品类别',
+      save: '保存',
+      cancel: '取消',
+      confirmDelete: '确定要删除此商品吗？',
+      productAdded: '商品已新增！',
+      productUpdated: '商品已更新！',
+      productDeleted: '商品已删除！',
+      fetchingProducts: '正在载入商品...',
+      noProducts: '目前没有商品。',
+      productShortDescription: '商品简介',
+      productDetailedDescription: '商品详细介绍',
+      backToProducts: '返回商品列表',
+      enterPassword: '请输入密码',
+      passwordIncorrect: '密码错误，请重新输入。',
+      submit: '提交',
+      translationFailed: '翻译失败，请检查网络连接或稍后重试。',
+      advertisement: '广告',
     },
     ko: {
       appName: 'FAU SHOPPING',
@@ -321,6 +350,35 @@ function App() {
       categoryPossession: '빙의용',
       categoryTSF: 'TSF용',
       categoryAgentGear: '무장용',
+      aboutUs: '회사 정보',
+      backToShop: '상점으로 돌아가기',
+      placeOrder: '주문하기',
+      orderSuccess: '주문해 주셔서 감사합니다!',
+      firebaseSettings: 'Firebase 설정',
+      adminPanel: '관리자 패널',
+      addProduct: '제품 추가',
+      editProduct: '제품 편집',
+      deleteProduct: '제품 삭제',
+      productName: '제품명',
+      productPrice: '제품 가격',
+      productImage: '제품 이미지 URL',
+      productCategory: '제품 카테고리',
+      save: '저장',
+      cancel: '취소',
+      confirmDelete: '이 제품을 삭제하시겠습니까?',
+      productAdded: '제품이 추가되었습니다!',
+      productUpdated: '제품이 업데이트되었습니다!',
+      productDeleted: '제품이 삭제되었습니다!',
+      fetchingProducts: '제품을 불러오는 중...',
+      noProducts: '현재 제품이 없습니다.',
+      productShortDescription: '간략 설명',
+      productDetailedDescription: '상세 설명',
+      backToProducts: '제품 목록으로 돌아가기',
+      enterPassword: '비밀번호를 입력하세요',
+      passwordIncorrect: '비밀번호가 틀렸습니다. 다시 입력하세요.',
+      submit: '제출',
+      translationFailed: '번역에 실패했습니다. 네트워크 연결을 확인하거나 나중에 다시 시도하세요.',
+      advertisement: '광고',
     },
   };
 
@@ -353,11 +411,12 @@ function App() {
   ]);
   const [currentAdVideoIndex, setCurrentAdVideoIndex] = useState(0);
 
-  // 可配置的應用程式內容狀態 (社長姓名、簡介、公司簡介)
+  // 可配置的應用程式內容狀態 (社長姓名、簡介、公司簡介、公司影片URL)
   const [appContent, setAppContent] = useState({
     ceoName: {},
     ceoBio: {},
-    companyBio: {}
+    companyBio: {},
+    companyVideoUrl: {} // 新增公司影片URL
   });
 
   // 硬編碼的 Firebase 配置 (請務必替換為您自己的專案詳細資訊)
@@ -492,7 +551,8 @@ function App() {
             ...prev,
             ceoName: data.ceoName || {},
             ceoBio: data.ceoBio || {},
-            companyBio: data.companyBio || {}
+            companyBio: data.companyBio || {},
+            companyVideoUrl: data.companyVideoUrl || {} // 讀取公司影片URL
           }));
           console.log("Data useEffect: App content fetched from Firestore:", data);
         } else {
@@ -501,7 +561,8 @@ function App() {
           setAppContent({
             ceoName: { ja: '黒川 智慧', en: 'Kurokawa Chie', 'zh-tw': '黑川 智慧', 'zh-cn': '黑川 智慧', ko: '쿠로카와 치에' },
             ceoBio: { ja: '黒川グループの会長である黒川智慧は、革新的なリーダーシップと卓越したビジョンで知られています。彼の指導の下、当社は技術と顧客満足度の新たな基準を確立しました。', en: 'Kurokawa Chie, the Chairman of Kurokawa Group, is known for his innovative leadership and exceptional vision. Under his guidance, the company has set new standards in technology and customer satisfaction.', 'zh-tw': '黑川集團董事長黑川智慧以其創新的領導力和卓越的遠見而聞聞。在他的指導下，公司在技術和客戶滿意度方面樹立了新的標準。', 'zh-cn': '黑川集团董事长黑川智慧以其创新的领导力和卓越的远见而闻名。在他的指导下，公司在技术和客户满意度方面树立了新的标准。', ko: '쿠로카와 그룹의 회장인 쿠로카와 치에는 혁신적인 리더십과 탁월한 비전으로 유명합니다. 그의 지도 아래 회사는 기술과 고객 만족도에서 새로운 기준을 세웠습니다。' },
-            companyBio: { ja: '黒川グループは、高品質な製品と優れた顧客サービスを提供することに専念する最先端の企業です。私たちは革新を推進し、お客様の生活を豊かにすることを目指しています。', en: 'Kurokawa Group is a cutting-edge enterprise dedicated to providing high-quality products and excellent customer service. We strive to drive innovation and enrich the lives of our customers.', 'zh-tw': '黑川集團是一家致力於提供高品質產品和卓越客戶服務的尖端企業。我們致力於推動創新，豐富客戶的生活。', 'zh-cn': '黑川集团是一家致力于提供高质量产品和卓越客户服务的尖端企业。我们致力于推动创新，丰富客户的生活。', ko: '쿠로카와 그룹은 고품질 제품과 우수한 고객 서비스를 제공하는 데 전념하는 최첨단 기업입니다。우리는 혁신을 추진하고 고객의 삶을 풍요롭게 하는 것을 목표로 합니다。' }
+            companyBio: { ja: '黒川グループは、高品質な製品と優れた顧客サービスを提供することに専念する最先端の企業です。私たちは革新を推進し、お客様の生活を豊かにすることを目指しています。', en: 'Kurokawa Group is a cutting-edge enterprise dedicated to providing high-quality products and excellent customer service. We strive to drive innovation and enrich the lives of our customers.', 'zh-tw': '黑川集團是一家致力於提供高品質產品和卓越客戶服務的尖端企業。我們致力於推動創新，豐富客戶的生活。', 'zh-cn': '黑川集团是一家致力于提供高质量产品和卓越客户服务的尖端企业。我们致力于推动创新，丰富客户的生活。', ko: '쿠로카와 그룹은 고품질 제품과 우수한 고객 서비스를 제공하는 데 전념하는 최첨단 기업입니다。우리는 혁신을 추진하고 고객의 삶을 풍요롭게 하는 것을 목표로 합니다。' },
+            companyVideoUrl: { ja: 'https://raw.githubusercontent.com/mdn/learning-area/main/html/multimedia-and-embedding/video-and-audio-content/rabbit320.mp4', en: 'https://raw.githubusercontent.com/mdn/learning-area/main/html/multimedia-and-embedding/video-and-audio-content/rabbit320.mp4', 'zh-tw': 'https://raw.githubusercontent.com/mdn/learning-area/main/html/multimedia-and-embedding/video-and-audio-content/rabbit320.mp4', 'zh-cn': 'https://raw.githubusercontent.com/mdn/learning-area/main/html/multimedia-and-embedding/video-and-audio-content/rabbit320.mp4', ko: 'https://raw.githubusercontent.com/mdn/learning-area/main/html/multimedia-and-embedding/video-and-audio-content/rabbit320.mp4' } // 預設公司影片URL
           });
         }
       }, (error) => {
@@ -756,7 +817,24 @@ function App() {
             </div>
 
             <div className="bg-gray-900 p-6 rounded-xl shadow-lg border border-purple-800 transform hover:scale-105 transition-transform duration-300">
-              <span className="text-purple-400 mx-auto mb-4 text-4xl">🏢</span> {/* Building icon */}
+              {/* 公司簡介影片 */}
+              {(appContent.companyVideoUrl[lang] || appContent.companyVideoUrl.ja) ? (
+                <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden shadow-lg border-2 border-purple-500">
+                  <video
+                    className="w-full h-full object-cover"
+                    src={appContent.companyVideoUrl[lang] || appContent.companyVideoUrl.ja}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    title="Company Profile Video"
+                  >
+                    您的瀏覽器不支持影片標籤。
+                  </video>
+                </div>
+              ) : (
+                <span className="text-purple-400 mx-auto mb-4 text-4xl">🏢</span> // Fallback icon
+              )}
               <h2 className="text-3xl font-bold text-purple-300 mb-4">{translations[lang].companyProfileTitle}</h2>
               <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">{appContent.companyBio[lang] || appContent.companyBio.ja || '公司簡介內容'}</p> {/* 使用動態內容 */}
             </div>
@@ -1208,6 +1286,7 @@ function App() {
     const [adminCeoName, setAdminCeoName] = useState('');
     const [adminCeoBio, setAdminCeoBio] = useState('');
     const [adminCompanyBio, setAdminCompanyBio] = useState('');
+    const [adminCompanyVideoUrl, setAdminCompanyVideoUrl] = useState(''); // 新增公司影片URL狀態
 
 
     useEffect(() => {
@@ -1225,7 +1304,7 @@ function App() {
         setPrice('');
         setImageURL('');
         setImageFile(null);
-        setCategory('催眠類'); // 預設分類為原始日文值
+        setCategory('催眠類'); // 重置為原始日文值
         setShortDescription('');
         setDetailedDescription('');
       }
@@ -1236,6 +1315,7 @@ function App() {
       setAdminCeoName(appContent.ceoName[lang] || appContent.ceoName.ja || '');
       setAdminCeoBio(appContent.ceoBio[lang] || appContent.ceoBio.ja || '');
       setAdminCompanyBio(appContent.companyBio[lang] || appContent.companyBio.ja || '');
+      setAdminCompanyVideoUrl(appContent.companyVideoUrl[lang] || appContent.companyVideoUrl.ja || ''); // 更新公司影片URL
     }, [appContent, lang]);
 
 
@@ -1350,7 +1430,8 @@ function App() {
         // 儲存多語言內容，僅更新當前語言的內容
         ceoName: { ...(appContent.ceoName || {}), [currentLanguage]: adminCeoName },
         ceoBio: { ...(appContent.ceoBio || {}), [currentLanguage]: adminCeoBio },
-        companyBio: { ...(appContent.companyBio || {}), [currentLanguage]: adminCompanyBio }
+        companyBio: { ...(appContent.companyBio || {}), [currentLanguage]: adminCompanyBio },
+        companyVideoUrl: { ...(appContent.companyVideoUrl || {}), [currentLanguage]: adminCompanyVideoUrl } // 儲存公司影片URL
       };
 
       try {
@@ -1580,12 +1661,25 @@ function App() {
                   required
                 ></textarea>
               </div>
+              <div className="md:col-span-2">
+                <label htmlFor="adminCompanyVideoUrl" className="block text-gray-300 text-sm font-semibold mb-1">
+                  公司簡介影片URL:
+                </label>
+                <input
+                  type="url"
+                  id="adminCompanyVideoUrl"
+                  value={adminCompanyVideoUrl}
+                  onChange={(e) => setAdminCompanyVideoUrl(e.target.value)}
+                  className="w-full p-3 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
+                  placeholder="輸入公司簡介影片URL (可選)"
+                />
+              </div>
             </div>
             <div className="mt-8 flex justify-end">
               <button
                 type="submit"
                 className="bg-red-600 hover:bg-red-500 text-white px-6 py-3 rounded-full font-semibold transition-colors duration-300 shadow-lg transform hover:scale-105"
-                // disabled={isTranslating} // 移除禁用狀態
+                // disabled={isTranslating}
               >
                 儲存關於我們內容
               </button>
@@ -1731,5 +1825,4 @@ function App() {
 
 // Render the App component into the root div
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
-
-
+ 
