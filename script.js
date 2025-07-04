@@ -398,13 +398,13 @@ function App() {
   const [isYouTubeAPIReady, setIsYouTubeAPIReady] = useState(false); // YouTube API 是否準備就緒
 
   // 新增影片 URL 狀態
-   const [ceoVideoUrl, setCeoVideoUrl] = useState('https://raw.githubusercontent.com/jiajun1208/femaleagentunit/main/video/CEO.mp4'); // 示例影片，請替換
+  const [ceoVideoUrl, setCeoVideoUrl] = useState('https://raw.githubusercontent.com/jiajun1208/femaleagentunit/main/video/CEO.mp4'); // 示例影片，請替換
 
   // 廣告影片輪播相關狀態
   const adVideoUrls = useRef([
       'https://www.youtube.com/watch?v=r7iAasYwWT4', // 範例 YouTube 影片 1
       'https://www.youtube.com/watch?v=-Sren30xpwY', // 範例 YouTube 影片 2
-      'http://googleusercontent.com/youtube.com/7', // 範例 YouTube 影片 3
+      'https://www.youtube.com/watch?v=r7iAasYwWT4', // 範例 YouTube 影片 3
       'https://raw.githubusercontent.com/mdn/learning-area/main/html/multimedia-and-embedding/video-and-audio-content/rabbit320.mp4' // 範例 MP4 影片
   ]);
   const [currentAdVideoIndex, setCurrentAdVideoIndex] = useState(0);
@@ -497,14 +497,15 @@ function App() {
     }
 
     // 設定 YouTube API readiness callback
-    window.onYouTubeIframeAPIReady = () => {
-      console.log("YouTube IFrame API is ready.");
-      setIsYouTubeAPIReady(true);
-    };
-
-    // 如果 YouTube API 已經載入 (例如，組件在初始載入後重新掛載)
+    // 檢查 window.YT 是否已經存在，如果存在則直接設定為 ready
     if (window.YT && window.YT.Player) {
       setIsYouTubeAPIReady(true);
+    } else {
+      // 否則，設定 onYouTubeIframeAPIReady 回調函數
+      window.onYouTubeIframeAPIReady = () => {
+        console.log("YouTube IFrame API is ready.");
+        setIsYouTubeAPIReady(true);
+      };
     }
 
   }, []); // 只在組件掛載時運行一次
@@ -835,8 +836,6 @@ function App() {
           playerVars: {
             autoplay: 1,
             mute: 1,
-            loop: 1,
-            playlist: youtubeVideoId, // Required for loop=1 to work with a single video
             controls: 1,
             modestbranding: 1,
             enablejsapi: 1, // Enable JS API control
@@ -928,7 +927,7 @@ function App() {
                   key={youtubeVideoId} // Key to force re-render
                   className="w-full h-full"
                   id="youtube-ad-player" // Assign an ID for YT.Player
-                  src={`https://www.youtube.com/embed/${youtubeVideoId}?enablejsapi=1&autoplay=1&mute=1&loop=1&playlist=${youtubeVideoId}&controls=1&modestbranding=1`}
+                  src={`https://www.youtube.com/embed/${youtubeVideoId}?enablejsapi=1&autoplay=1&mute=1&controls=1&modestbranding=1`}
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
@@ -943,7 +942,6 @@ function App() {
                   src={currentAdVideoUrl}
                   controls
                   autoPlay
-                  loop
                   muted
                   playsInline
                   title="Advertisement Video"
@@ -1674,6 +1672,3 @@ function App() {
 
 // Render the App component into the root div
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
-
-
-
