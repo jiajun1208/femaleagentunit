@@ -189,6 +189,7 @@ function App() {
       passwordIncorrect: 'パスワードが間違っています。もう一度入力してください。',
       submit: '送信',
       translationFailed: '翻譯失敗，請檢查網路連線或稍後再試。', // 新增翻譯失敗訊息
+      advertisement: '廣告', // 新增廣告翻譯
     },
     en: {
       appName: 'FAU SHOPPING',
@@ -250,6 +251,7 @@ function App() {
       passwordIncorrect: 'Incorrect password, please try again.',
       submit: 'Submit',
       translationFailed: 'Translation failed, please check network or try again later.', // 新增翻譯失敗訊息
+      advertisement: 'Advertisement', // 新增廣告翻譯
     },
     'zh-tw': {
       appName: 'FAU SHOPPING',
@@ -311,6 +313,7 @@ function App() {
       passwordIncorrect: '密碼錯誤，請重新輸入。',
       submit: '提交',
       translationFailed: '翻譯失敗，請檢查網路連線或稍後再試。', // 新增翻譯失敗訊息
+      advertisement: '廣告', // 新增廣告翻譯
     },
     'zh-cn': {
       appName: 'FAU SHOPPING',
@@ -395,6 +398,12 @@ function App() {
   const [showPasswordModal, setShowPasswordModal] = useState(false); // 控制密碼輸入框顯示
   const [passwordInput, setPasswordInput] = useState(''); // 密碼輸入框的值
   const [passwordError, setPasswordError] = useState(''); // 密碼錯誤訊息
+
+  // 新增影片 URL 狀態
+  // 請將這些 URL 替換為您在 GitHub 上的原始影片連結
+  const [ceoVideoUrl, setCeoVideoUrl] = useState('https://raw.githubusercontent.com/mdn/learning-area/main/html/multimedia-and-embedding/video-and-audio-content/rabbit320.mp4'); // 示例影片，請替換
+  const [adVideoUrl, setAdVideoUrl] = useState('https://raw.githubusercontent.com/mdn/learning-area/main/html/multimedia-and-embedding/video-and-audio-content/rabbit320.mp4'); // 示例影片，請替換
+
 
   // 硬編碼的 Firebase 配置 (請務必替換為您自己的專案詳細資訊)
   // 您可以在 Firebase 控制台 (console.firebase.google.com) > 專案設定 (Project settings) > 您的應用程式 (Your apps) 中找到這些資訊。
@@ -722,7 +731,7 @@ function App() {
   );
 
   // 簡介頁面組件
-  const IntroPage = ({ onEnterShop, lang, translations }) => (
+  const IntroPage = ({ onEnterShop, lang, translations, ceoVideoUrl }) => ( // 傳遞 ceoVideoUrl
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-purple-900 text-white flex flex-col items-center p-4 overflow-y-auto"> {/* 允許滾動 */}
       <div className="bg-gray-800 bg-opacity-90 rounded-2xl shadow-2xl p-8 md:p-12 max-w-4xl w-full text-center border border-purple-700 flex flex-col flex-grow">
         <div className="flex-grow flex flex-col justify-center items-center"> {/* 內容區塊 */}
@@ -732,7 +741,24 @@ function App() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
             <div className="bg-gray-900 p-6 rounded-xl shadow-lg border border-purple-800 transform hover:scale-105 transition-transform duration-300">
-              <span className="text-purple-400 mx-auto mb-4 text-4xl">👤</span> {/* User icon */}
+              {/* 社長頭像影片 */}
+              {ceoVideoUrl ? (
+                <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden shadow-lg border-2 border-purple-500">
+                  <video
+                    className="w-full h-full object-cover"
+                    src={ceoVideoUrl}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    title="CEO Profile Video"
+                  >
+                    您的瀏覽器不支持影片標籤。
+                  </video>
+                </div>
+              ) : (
+                <span className="text-purple-400 mx-auto mb-4 text-4xl">👤</span> // Fallback icon
+              )}
               <h2 className="text-3xl font-bold text-purple-300 mb-4">{translations[lang].ceoProfileTitle}</h2>
               <h3 className="text-2xl font-semibold text-red-300 mb-2">{translations[lang].ceoName}</h3>
               <p className="text-gray-300 leading-relaxed">{translations[lang].ceoBio}</p>
@@ -760,7 +786,7 @@ function App() {
   );
 
   // 購物頁面組件
-  const ShopPage = ({ products, onAddToCart, cartCount, onViewCart, lang, translations, onCategoryChange, selectedCategory, onViewIntro, onNavigateToAdmin, onProductClick }) => (
+  const ShopPage = ({ products, onAddToCart, cartCount, onViewCart, lang, translations, onCategoryChange, selectedCategory, onViewIntro, onNavigateToAdmin, onProductClick, adVideoUrl }) => ( // 傳遞 adVideoUrl
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-purple-900 text-white flex flex-col">
       {/* 頂部導航欄 */}
       <header className="w-full bg-gray-900 p-4 shadow-xl flex items-center justify-center relative">
@@ -812,6 +838,27 @@ function App() {
           </button>
         </div>
       </header>
+
+      {/* 廣告影片欄位 */}
+      {adVideoUrl && (
+        <div className="w-full bg-gray-800 p-4 md:p-6 lg:p-8 shadow-inner border-b border-purple-700 text-center">
+          <h2 className="text-2xl font-bold text-purple-400 mb-4">{translations[lang].advertisement}</h2>
+          <div className="relative w-full max-w-4xl mx-auto aspect-video rounded-xl overflow-hidden shadow-2xl border-2 border-red-500">
+            <video
+              className="w-full h-full object-cover"
+              src={adVideoUrl}
+              controls
+              autoPlay
+              loop
+              muted
+              playsInline
+              title="Advertisement Video"
+            >
+              您的瀏覽器不支持影片標籤。
+            </video>
+          </div>
+        </div>
+      )}
 
       {/* 主要內容區域 */}
       <main className="flex-grow p-6 md:p-8 lg:p-10">
@@ -1452,7 +1499,7 @@ function App() {
   return (
     <div className="font-sans antialiased">
       {currentPage === 'intro' && (
-        <IntroPage onEnterShop={() => setCurrentPage('shop')} lang={currentLanguage} translations={translations} />
+        <IntroPage onEnterShop={() => setCurrentPage('shop')} lang={currentLanguage} translations={translations} ceoVideoUrl={ceoVideoUrl} />
       )}
       {currentPage === 'shop' && (
         <ShopPage
@@ -1467,6 +1514,7 @@ function App() {
           onViewIntro={() => setCurrentPage('intro')}
           onNavigateToAdmin={handleNavigateToAdmin} // 使用新的處理函數
           onProductClick={handleProductClick} // 傳遞商品點擊處理函數
+          adVideoUrl={adVideoUrl} // 傳遞廣告影片 URL
         />
       )}
       {currentPage === 'checkout' && (
