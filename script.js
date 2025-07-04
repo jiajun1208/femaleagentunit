@@ -10,49 +10,8 @@ let firebaseApp = null;
 let db = null;
 let auth = null;
 
-// Gemini API 翻譯函數
-async function translateText(text, targetLang, sourceLang = 'auto') {
-  if (!text) {
-    console.log(`TranslateText: No text provided for translation to ${targetLang}. Returning empty.`);
-    return text; // 如果沒有文字，直接返回
-  }
-  console.log(`TranslateText: Attempting to translate "${text}" from ${sourceLang} to ${targetLang}.`);
-  try {
-    const chatHistory = [{ role: "user", parts: [{ text: `Translate "${text}" from ${sourceLang} to ${targetLang}. Only return the translated text.` }] }];
-    const payload = { contents: chatHistory };
-    const apiKey = ""; // Canvas 將在運行時提供此金鑰
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-    console.log(`TranslateText: Fetching from API: ${apiUrl}`);
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (!response.ok) {
-      const errorBody = await response.text();
-      console.error(`TranslateText: API response not OK. Status: ${response.status}, Body: ${errorBody}`);
-      throw new Error(`API request failed with status ${response.status}: ${errorBody}`);
-    }
-
-    const result = await response.json();
-    console.log("TranslateText: Raw API response:", result);
-
-    if (result.candidates && result.candidates.length > 0 &&
-      result.candidates[0].content && result.candidates[0].content.parts &&
-      result.candidates[0].content.parts.length > 0) {
-      const translatedText = result.candidates[0].content.parts[0].text;
-      console.log(`TranslateText: Successfully translated "${text}" to "${translatedText}" (${targetLang}).`);
-      return translatedText;
-    } else {
-      console.warn("TranslateText: Translation API returned unexpected structure or no content. Returning original text.", result);
-      return text; // 錯誤時返回原始文字
-    }
-  } catch (error) {
-    console.error("TranslateText: Error during translation API call:", error);
-    return text; // 錯誤時返回原始文字
-  }
-}
+// 移除 Gemini API 翻譯函數，因為用戶不使用
+// async function translateText(...) { ... }
 
 
 // Firebase 配置彈窗組件 (此組件仍存在，但不再從 AdminPage 觸發)
@@ -182,7 +141,7 @@ function App() {
       enterPassword: 'パスワードを入力してください',
       passwordIncorrect: 'パスワードが間違っています。もう一度入力してください。',
       submit: '送信',
-      translationFailed: '翻譯失敗，請檢查網路連線或稍後再試。',
+      translationFailed: '翻譯失敗，請檢查網路連線或稍後再試。', // 雖然不使用自動翻譯，但保留此鍵以防萬一
       advertisement: '廣告',
     },
     en: {
@@ -1243,7 +1202,7 @@ function App() {
     const [shortDescription, setShortDescription] = useState(''); // 新增簡介狀態
     const [detailedDescription, setDetailedDescription] = useState(''); // 新增詳細介紹狀態
     const [message, setMessage] = useState(''); // Feedback message
-    const [isTranslating, setIsTranslating] = useState(false); // 新增翻譯狀態
+    // const [isTranslating, setIsTranslating] = useState(false); // 移除此狀態
 
     // 新增用於「關於我們」內容的狀態
     const [adminCeoName, setAdminCeoName] = useState('');
@@ -1306,59 +1265,35 @@ function App() {
         return;
       }
 
-      setIsTranslating(true); // 開始翻譯，顯示載入狀態
-      showMessage("正在翻譯商品資訊...");
+      // 移除 isTranslating 相關邏輯
+      // setIsTranslating(true);
+      // showMessage("正在翻譯商品資訊...");
 
       const productData = {
         price: parseFloat(price),
         image: imageURL, // 使用圖片 URL (可能是本地 URL 或外部 URL)
         category, // 儲存原始分類值
-        name: {}, // 將儲存所有語言的翻譯
-        shortDescription: {}, // 將儲存所有語言的翻譯
-        detailedDescription: {} // 將儲存所有語言的翻譯
+        // 儲存多語言內容，僅更新當前語言的內容
+        name: { ...(editingProduct?.name || {}), [currentLanguage]: name },
+        shortDescription: { ...(editingProduct?.shortDescription || {}), [currentLanguage]: shortDescription },
+        detailedDescription: { ...(editingProduct?.detailedDescription || {}), [currentLanguage]: detailedDescription }
       };
 
-      const sourceLang = currentLanguage; // 以當前 UI 語言作為源語言
-      const targetLanguages = ['ja', 'en', 'zh-tw', 'zh-cn', 'ko']; // 所有支援的語言
-
-      let translationSuccess = true;
       try {
-        // 遍歷所有目標語言並進行翻譯
-        for (const langCode of targetLanguages) {
-          const translatedName = await translateText(name, langCode, sourceLang);
-          const translatedShortDescription = await translateText(shortDescription, langCode, sourceLang);
-          const translatedDetailedDescription = await translateText(detailedDescription, langCode, sourceLang);
-
-          // 檢查翻譯是否成功 (如果返回原始文字，且原始文字不為空，則視為失敗)
-          if (name !== "" && translatedName === name) translationSuccess = false;
-          if (shortDescription !== "" && translatedShortDescription === shortDescription) translationSuccess = false;
-          if (detailedDescription !== "" && translatedDetailedDescription === detailedDescription) translationSuccess = false;
-
-          productData.name[langCode] = translatedName;
-          productData.shortDescription[langCode] = translatedShortDescription;
-          productData.detailedDescription[langCode] = translatedDetailedDescription;
-        }
-
-        if (!translationSuccess) {
-            console.warn("AdminPage: Some translations might have failed. Check console for details.");
-            showMessage(translations[lang].translationFailed); // 顯示翻譯失敗訊息
-        }
-
-
         // 確保 __app_id 變數存在
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
         if (editingProduct) {
           // Update product
           const productRef = window.firebase.doc(db, 'artifacts', appId, 'public', 'data', 'products', editingProduct.id);
-          await window.firebase.setDoc(productRef, productData); // Use setDoc to completely replace or create
-          if (translationSuccess) showMessage(translations[lang].productUpdated); // 只有翻譯成功才顯示更新成功
+          await window.firebase.setDoc(productRef, productData, { merge: true }); // 使用 merge: true 以合併現有文件
+          showMessage(translations[lang].productUpdated);
           console.log("AdminPage: Product updated successfully:", editingProduct.id);
         } else {
           // Add new product
           const productsColRef = window.firebase.collection(db, 'artifacts', appId, 'public', 'data', 'products');
           const docRef = await window.firebase.addDoc(productsColRef, productData);
-          if (translationSuccess) showMessage(translations[lang].productAdded); // 只有翻譯成功才顯示新增成功
+          showMessage(translations[lang].productAdded);
           console.log("AdminPage: Product added successfully with ID:", docRef.id);
         }
         setEditingProduct(null); // Clear form
@@ -1373,7 +1308,7 @@ function App() {
         console.error("AdminPage: Error adding/updating product:", error);
         showMessage("操作失敗：" + error.message);
       } finally {
-        setIsTranslating(false); // 翻譯結束
+        // setIsTranslating(false); // 移除此狀態
       }
     };
 
@@ -1402,50 +1337,33 @@ function App() {
     const handleSaveAboutUsContent = async (e) => {
       e.preventDefault();
       if (!db) {
+        console.error("AdminPage: Firestore is not initialized for saving about us content.");
         showMessage("Firestore 未初始化，無法操作。請檢查 Firebase 設定。");
         return;
       }
 
-      setIsTranslating(true);
-      showMessage("正在翻譯關於我們內容...");
+      // 移除 isTranslating 相關邏輯
+      // setIsTranslating(true);
+      // showMessage("正在翻譯關於我們內容...");
 
       const newAppContentData = {
-        ceoName: {},
-        ceoBio: {},
-        companyBio: {}
+        // 儲存多語言內容，僅更新當前語言的內容
+        ceoName: { ...(appContent.ceoName || {}), [currentLanguage]: adminCeoName },
+        ceoBio: { ...(appContent.ceoBio || {}), [currentLanguage]: adminCeoBio },
+        companyBio: { ...(appContent.companyBio || {}), [currentLanguage]: adminCompanyBio }
       };
 
-      const sourceLang = currentLanguage;
-      const targetLanguages = ['ja', 'en', 'zh-tw', 'zh-cn', 'ko'];
-
-      let translationSuccess = true;
       try {
-        for (const langCode of targetLanguages) {
-          newAppContentData.ceoName[langCode] = await translateText(adminCeoName, langCode, sourceLang);
-          newAppContentData.ceoBio[langCode] = await translateText(adminCeoBio, langCode, sourceLang);
-          newAppContentData.companyBio[langCode] = await translateText(adminCompanyBio, langCode, sourceLang);
-
-          // 檢查翻譯是否成功 (如果返回原始文字，且原始文字不為空，則視為失敗)
-          if (adminCeoName !== "" && newAppContentData.ceoName[langCode] === adminCeoName) translationSuccess = false;
-          if (adminCeoBio !== "" && newAppContentData.ceoBio[langCode] === adminCeoBio) translationSuccess = false;
-          if (adminCompanyBio !== "" && newAppContentData.companyBio[langCode] === adminCompanyBio) translationSuccess = false;
-        }
-
-        if (!translationSuccess) {
-            console.warn("AdminPage: Some translations for about us content might have failed.");
-            showMessage(translations[lang].translationFailed);
-        }
-
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const appSettingsDocRef = window.firebase.doc(db, `artifacts/${appId}/public/data/appSettings/introContent`);
-        await window.firebase.setDoc(appSettingsDocRef, newAppContentData);
-        if (translationSuccess) showMessage("關於我們內容已更新！");
+        await window.firebase.setDoc(appSettingsDocRef, newAppContentData, { merge: true }); // 使用 merge: true
+        showMessage("關於我們內容已更新！");
         console.log("AdminPage: About us content updated successfully.");
       } catch (error) {
-        console.error("AdminPage: Error updating about us content:", error);
-        showMessage("更新關於我們內容失敗：" + error.message);
+        console.error("AdminPage: Error updating about us content to Firestore:", error); // 更詳細的錯誤日誌
+        showMessage(`更新關於我們內容失敗：${error.message}`); // 顯示錯誤訊息
       } finally {
-        setIsTranslating(false);
+        // setIsTranslating(false); // 移除此狀態
       }
     };
 
@@ -1482,11 +1400,12 @@ function App() {
             </div>
           )}
 
-          {isTranslating && (
+          {/* 移除 isTranslating 相關的載入訊息 */}
+          {/* {isTranslating && (
             <div className="bg-blue-700 text-white text-center py-3 px-6 rounded-lg mb-6 text-lg font-semibold shadow-lg animate-pulse">
               正在翻譯商品資訊，請稍候...
             </div>
-          )}
+          )} */}
 
           {/* 新增/編輯商品表單 */}
           <form onSubmit={handleAddOrUpdateProduct} className="bg-gray-900 p-6 rounded-xl shadow-lg mb-8 border border-purple-800">
@@ -1601,7 +1520,7 @@ function App() {
               <button
                 type="submit"
                 className="bg-red-600 hover:bg-red-500 text-white px-6 py-3 rounded-full font-semibold transition-colors duration-300 shadow-lg transform hover:scale-105"
-                disabled={isTranslating} // 翻譯中禁用按鈕
+                // disabled={isTranslating} // 移除禁用狀態
               >
                 {translations[lang].save}
               </button>
@@ -1610,7 +1529,7 @@ function App() {
                   type="button"
                   onClick={() => setEditingProduct(null)}
                   className="bg-gray-700 hover:bg-gray-600 text-gray-300 px-6 py-3 rounded-full font-semibold transition-colors duration-300 shadow-md"
-                  disabled={isTranslating} // 翻譯中禁用按鈕
+                  // disabled={isTranslating} // 移除禁用狀態
                 >
                   {translations[lang].cancel}
                 </button>
@@ -1666,7 +1585,7 @@ function App() {
               <button
                 type="submit"
                 className="bg-red-600 hover:bg-red-500 text-white px-6 py-3 rounded-full font-semibold transition-colors duration-300 shadow-lg transform hover:scale-105"
-                disabled={isTranslating}
+                // disabled={isTranslating} // 移除禁用狀態
               >
                 儲存關於我們內容
               </button>
@@ -1812,4 +1731,5 @@ function App() {
 
 // Render the App component into the root div
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
 
