@@ -9,34 +9,50 @@ const { useState, useEffect } = React;
 let firebaseApp = null;
 let db = null;
 let auth = null;
-// let storage = null; // Firebase Storage 實例已移除
+// Firebase Storage 實例已移除，因為用戶不需要該功能
 
 // Gemini API 翻譯函數
 async function translateText(text, targetLang, sourceLang = 'auto') {
-  if (!text) return text; // 如果沒有文字，直接返回
+  if (!text) {
+    console.log(`TranslateText: No text provided for translation to ${targetLang}. Returning empty.`);
+    return text; // 如果沒有文字，直接返回
+  }
+  console.log(`TranslateText: Attempting to translate "${text}" from ${sourceLang} to ${targetLang}.`);
   try {
     const chatHistory = [{ role: "user", parts: [{ text: `Translate "${text}" from ${sourceLang} to ${targetLang}. Only return the translated text.` }] }];
     const payload = { contents: chatHistory };
     const apiKey = ""; // Canvas 將在運行時提供此金鑰
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    console.log(`TranslateText: Fetching from API: ${apiUrl}`);
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      console.error(`TranslateText: API response not OK. Status: ${response.status}, Body: ${errorBody}`);
+      throw new Error(`API request failed with status ${response.status}: ${errorBody}`);
+    }
+
     const result = await response.json();
+    console.log("TranslateText: Raw API response:", result);
+
     if (result.candidates && result.candidates.length > 0 &&
       result.candidates[0].content && result.candidates[0].content.parts &&
       result.candidates[0].content.parts.length > 0) {
       const translatedText = result.candidates[0].content.parts[0].text;
-      console.log(`Translated "${text}" to "${translatedText}" (${targetLang})`);
+      console.log(`TranslateText: Successfully translated "${text}" to "${translatedText}" (${targetLang}).`);
       return translatedText;
     } else {
-      console.error("Translation API returned unexpected structure or no content:", result);
+      console.warn("TranslateText: Translation API returned unexpected structure or no content. Returning original text.", result);
       return text; // 錯誤時返回原始文字
     }
   } catch (error) {
-    console.error("Error during translation API call:", error);
+    console.error("TranslateText: Error during translation API call:", error);
+    // 在這裡不直接顯示用戶訊息，因為會被 AdminPage 的 message 覆蓋，
+    // 讓 AdminPage 統一處理翻譯失敗的訊息。
     return text; // 錯誤時返回原始文字
   }
 }
@@ -172,7 +188,7 @@ function App() {
       enterPassword: 'パスワードを入力してください',
       passwordIncorrect: 'パスワードが間違っています。もう一度入力してください。',
       submit: '送信',
-      // uploadingImage: '画像をアップロード中...', // 已移除
+      translationFailed: '翻譯失敗，請檢查網路連線或稍後再試。', // 新增翻譯失敗訊息
     },
     en: {
       appName: 'FAU SHOPPING',
@@ -233,7 +249,7 @@ function App() {
       enterPassword: 'Please enter password',
       passwordIncorrect: 'Incorrect password, please try again.',
       submit: 'Submit',
-      // uploadingImage: 'Uploading image...', // 已移除
+      translationFailed: 'Translation failed, please check network or try again later.', // 新增翻譯失敗訊息
     },
     'zh-tw': {
       appName: 'FAU SHOPPING',
@@ -294,7 +310,7 @@ function App() {
       enterPassword: '請輸入密碼',
       passwordIncorrect: '密碼錯誤，請重新輸入。',
       submit: '提交',
-      // uploadingImage: '正在上傳圖片...', // 已移除
+      translationFailed: '翻譯失敗，請檢查網路連線或稍後再試。', // 新增翻譯失敗訊息
     },
     'zh-cn': {
       appName: 'FAU SHOPPING',
@@ -338,7 +354,7 @@ function App() {
       ceoBio: '쿠로카와 그룹의 회장인 쿠로카와 치에는 혁신적인 리더십과 탁월한 비전으로 유명합니다. 그의 지도 아래 회사는 기술과 고객 만족도에서 새로운 기준을 세웠습니다.',
       companyCompany: '쿠로카와 그룹은 고품질 제품과 우수한 고객 서비스를 제공하는 데 전념하는 최첨단 기업입니다。私たちは革新を推進し、お客様の生活を豊かにすることを目指しています。',
       enterShop: '쇼핑 시작',
-      productsTitle: '製品',
+      productsTitle: '제품',
       addToCart: '장바구니에 추가',
       viewCart: '장바구니 보기',
       cartTitle: '장바구니',
@@ -982,30 +998,30 @@ function App() {
     const [editingProduct, setEditingProduct] = useState(null); // null for add, product object for edit
     const [name, setName] = useState('');
     const [price, setPrice] = useState('');
-    const [image, setImage] = useState(''); // 圖片 URL
-    // const [imageFile, setImageFile] = useState(null); // 已移除圖片檔案狀態
+    const [imageURL, setImageURL] = useState(''); // 用於顯示圖片 URL
+    const [imageFile, setImageFile] = useState(null); // 用於儲存選擇的圖片檔案
     const [category, setCategory] = useState('催眠類'); // Default category (original value)
     const [shortDescription, setShortDescription] = useState(''); // 新增簡介狀態
     const [detailedDescription, setDetailedDescription] = useState(''); // 新增詳細介紹狀態
     const [message, setMessage] = useState(''); // Feedback message
     const [isTranslating, setIsTranslating] = useState(false); // 新增翻譯狀態
-    // const [isUploadingImage, setIsUploadingImage] = useState(false); // 已移除圖片上傳狀態
+    // isUploadingImage 狀態已移除
 
     useEffect(() => {
       if (editingProduct) {
         // 編輯時，載入當前語言的內容，如果沒有則載入日文或原始值
         setName(editingProduct.name[lang] || editingProduct.name.ja || editingProduct.name || '');
         setPrice(editingProduct.price);
-        setImage(editingProduct.image || ''); // 載入現有圖片 URL
-        // setImageFile(null); // 清空圖片檔案選擇，已移除
+        setImageURL(editingProduct.image || ''); // 載入現有圖片 URL
+        setImageFile(null); // 清空圖片檔案選擇
         setCategory(editingProduct.category); // 儲存原始分類值
         setShortDescription(editingProduct.shortDescription[lang] || editingProduct.shortDescription.ja || editingProduct.shortDescription || '');
         setDetailedDescription(editingProduct.detailedDescription[lang] || editingProduct.detailedDescription.ja || editingProduct.detailedDescription || '');
       } else {
         setName('');
         setPrice('');
-        setImage('');
-        // setImageFile(null); // 已移除
+        setImageURL('');
+        setImageFile(null);
         setCategory('催眠類'); // 預設分類為原始日文值
         setShortDescription('');
         setDetailedDescription('');
@@ -1017,15 +1033,18 @@ function App() {
       setTimeout(() => setMessage(''), 3000);
     };
 
-    // const handleFileChange = (e) => { // 已移除
-    //   if (e.target.files[0]) {
-    //     setImageFile(e.target.files[0]);
-    //     setImage(URL.createObjectURL(e.target.files[0])); // 預覽圖片
-    //   } else {
-    //     setImageFile(null);
-    //     setImage('');
-    //   }
-    // };
+    const handleFileChange = (e) => {
+      if (e.target.files[0]) {
+        const file = e.target.files[0];
+        setImageFile(file);
+        setImageURL(URL.createObjectURL(file)); // 預覽圖片
+        // 警告用戶本地圖片不會持久化
+        showMessage("注意：本地上傳的圖片僅在本次會話中可見，重新整理或關閉瀏覽器後將會消失。");
+      } else {
+        setImageFile(null);
+        setImageURL('');
+      }
+    };
 
     const handleAddOrUpdateProduct = async (e) => {
       e.preventDefault();
@@ -1038,33 +1057,9 @@ function App() {
       setIsTranslating(true); // 開始翻譯，顯示載入狀態
       showMessage("正在翻譯商品資訊...");
 
-      // let finalImageUrl = image; // 預設使用現有的圖片 URL，已移除圖片上傳邏輯
-
-      // // 如果有選擇新的圖片檔案，則上傳，已移除
-      // if (imageFile) {
-      //   setIsUploadingImage(true);
-      //   showMessage(translations[lang].uploadingImage);
-      //   try {
-      //     const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-      //     const storageRef = window.firebase.ref(storage, `artifacts/${appId}/public/images/${imageFile.name}`);
-      //     const uploadTask = await window.firebase.uploadBytes(storageRef, imageFile);
-      //     finalImageUrl = await window.firebase.getDownloadURL(uploadTask.ref);
-      //     console.log("Image uploaded successfully:", finalImageUrl);
-      //     showMessage("圖片上傳成功！");
-      //   } catch (error) {
-      //     console.error("Error uploading image:", error);
-      //     showMessage("圖片上傳失敗：" + error.message);
-      //     setIsUploadingImage(false);
-      //     setIsTranslating(false);
-      //     return; // 圖片上傳失敗，停止後續操作
-      //   } finally {
-      //     setIsUploadingImage(false);
-      //   }
-      // }
-
       const productData = {
         price: parseFloat(price),
-        image: image, // 使用圖片 URL
+        image: imageURL, // 使用圖片 URL (可能是本地 URL 或外部 URL)
         category, // 儲存原始分類值
         name: {}, // 將儲存所有語言的翻譯
         shortDescription: {}, // 將儲存所有語言的翻譯
@@ -1074,13 +1069,29 @@ function App() {
       const sourceLang = currentLanguage; // 以當前 UI 語言作為源語言
       const targetLanguages = ['ja', 'en', 'zh-tw', 'zh-cn', 'ko']; // 所有支援的語言
 
+      let translationSuccess = true;
       try {
         // 遍歷所有目標語言並進行翻譯
         for (const langCode of targetLanguages) {
-          productData.name[langCode] = await translateText(name, langCode, sourceLang);
-          productData.shortDescription[langCode] = await translateText(shortDescription, langCode, sourceLang);
-          productData.detailedDescription[langCode] = await translateText(detailedDescription, langCode, sourceLang);
+          const translatedName = await translateText(name, langCode, sourceLang);
+          const translatedShortDescription = await translateText(shortDescription, langCode, sourceLang);
+          const translatedDetailedDescription = await translateText(detailedDescription, langCode, sourceLang);
+
+          // 檢查翻譯是否成功 (如果返回原始文字，則視為失敗)
+          if (translatedName === name && name !== "") translationSuccess = false;
+          if (translatedShortDescription === shortDescription && shortDescription !== "") translationSuccess = false;
+          if (translatedDetailedDescription === detailedDescription && detailedDescription !== "") translationSuccess = false;
+
+          productData.name[langCode] = translatedName;
+          productData.shortDescription[langCode] = translatedShortDescription;
+          productData.detailedDescription[langCode] = translatedDetailedDescription;
         }
+
+        if (!translationSuccess) {
+            console.warn("AdminPage: Some translations might have failed. Check console for details.");
+            showMessage(translations[lang].translationFailed); // 顯示翻譯失敗訊息
+        }
+
 
         // 確保 __app_id 變數存在
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -1089,20 +1100,20 @@ function App() {
           // Update product
           const productRef = window.firebase.doc(db, 'artifacts', appId, 'public', 'data', 'products', editingProduct.id);
           await window.firebase.setDoc(productRef, productData); // Use setDoc to completely replace or create
-          showMessage(translations[lang].productUpdated);
+          if (translationSuccess) showMessage(translations[lang].productUpdated); // 只有翻譯成功才顯示更新成功
           console.log("AdminPage: Product updated successfully:", editingProduct.id);
         } else {
           // Add new product
           const productsColRef = window.firebase.collection(db, 'artifacts', appId, 'public', 'data', 'products');
           const docRef = await window.firebase.addDoc(productsColRef, productData);
-          showMessage(translations[lang].productAdded);
+          if (translationSuccess) showMessage(translations[lang].productAdded); // 只有翻譯成功才顯示新增成功
           console.log("AdminPage: Product added successfully with ID:", docRef.id);
         }
         setEditingProduct(null); // Clear form
         setName('');
         setPrice('');
-        setImage('');
-        // setImageFile(null); // 已移除
+        setImageURL(''); // 清空圖片 URL
+        setImageFile(null); // 清空圖片檔案
         setCategory('催眠類'); // 重置為原始日文值
         setShortDescription('');
         setDetailedDescription('');
@@ -1174,13 +1185,6 @@ function App() {
             </div>
           )}
 
-          {/* isUploadingImage 相關的訊息已移除 */}
-          {/* {isUploadingImage && (
-            <div className="bg-yellow-700 text-white text-center py-3 px-6 rounded-lg mb-6 text-lg font-semibold shadow-lg animate-pulse">
-              {translations[lang].uploadingImage}
-            </div>
-          )} */}
-
           {/* 新增/編輯商品表單 */}
           <form onSubmit={handleAddOrUpdateProduct} className="bg-gray-900 p-6 rounded-xl shadow-lg mb-8 border border-purple-800">
             <h3 className="text-2xl font-bold text-purple-300 mb-6">
@@ -1215,9 +1219,8 @@ function App() {
                 />
               </div>
               <div className="md:col-span-2">
-                {/* 圖片檔案上傳欄位已移除 */}
-                {/* <label htmlFor="productImageFile" className="block text-gray-300 text-sm font-semibold mb-1">
-                  選擇圖片檔案 (優先上傳):
+                <label htmlFor="productImageFile" className="block text-gray-300 text-sm font-semibold mb-1">
+                  選擇圖片檔案 (本地上傳):
                 </label>
                 <input
                   type="file"
@@ -1225,22 +1228,22 @@ function App() {
                   accept="image/*"
                   onChange={handleFileChange}
                   className="w-full p-3 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500 text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100"
-                /> */}
-                {image && ( // 判斷是否有圖片 URL 才顯示預覽
+                />
+                {imageURL && ( // 判斷是否有圖片 URL 才顯示預覽
                   <div className="mt-4">
                     <p className="text-gray-400 text-sm mb-2">圖片預覽 / 現有圖片URL:</p>
-                    <img src={image} alt="Product Preview" className="max-w-xs h-auto rounded-md shadow-md" />
-                    <p className="text-gray-500 text-xs break-all mt-2">{image}</p>
+                    <img src={imageURL} alt="Product Preview" className="max-w-xs h-auto rounded-md shadow-md" />
+                    <p className="text-gray-500 text-xs break-all mt-2">{imageURL}</p>
                   </div>
                 )}
                 <label htmlFor="productImageURL" className="block text-gray-300 text-sm font-semibold mb-1 mt-4">
-                  {translations[lang].productImage}:
+                  或輸入圖片URL (如果未選擇檔案):
                 </label>
                 <input
                   type="url"
                   id="productImageURL"
-                  value={image}
-                  onChange={(e) => { setImage(e.target.value); }} // 只更新圖片 URL
+                  value={imageURL}
+                  onChange={(e) => { setImageURL(e.target.value); setImageFile(null); }} // 如果手動輸入URL，則清空檔案選擇
                   className="w-full p-3 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
                   placeholder="https://example.com/image.jpg"
                   required // 圖片 URL 仍為必填
@@ -1458,4 +1461,3 @@ function App() {
 
 // Render the App component into the root div
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
-
