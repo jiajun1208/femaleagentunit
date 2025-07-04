@@ -402,7 +402,7 @@ function App() {
   // 新增影片 URL 狀態
   // 請將這些 URL 替換為您在 GitHub 上的原始影片連結或 YouTube 連結
   const [ceoVideoUrl, setCeoVideoUrl] = useState('https://raw.githubusercontent.com/jiajun1208/femaleagentunit/main/video/CEO.mp4'); // 示例影片，請替換
-  const [adVideoUrl, setAdVideoUrl] = useState('https://www.youtube.com/watch?v=dQw4w9WgXcQ'); // 示例 YouTube 影片，請替換
+  const [adVideoUrl, setAdVideoUrl] = useState('https://www.youtube.com/watch?v=r7iAasYwWT4'); // 示例 YouTube 影片，請替換
 
   // 硬編碼的 Firebase 配置 (請務必替換為您自己的專案詳細資訊)
   // 您可以在 Firebase 控制台 (console.firebase.google.com) > 專案設定 (Project settings) > 您的應用程式 (Your apps) 中找到這些資訊。
