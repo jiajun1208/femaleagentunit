@@ -354,7 +354,7 @@ function App() {
       ceoBio: '쿠로카와 그룹의 회장인 쿠로카와 치에는 혁신적인 리더십과 탁월한 비전으로 유명합니다. 그의 지도 아래 회사는 기술과 고객 만족도에서 새로운 기준을 세웠습니다.',
       companyCompany: '쿠로카와 그룹은 고품질 제품과 우수한 고객 서비스를 제공하는 데 전념하는 최첨단 기업입니다。私たちは革新を推進し、お客様の生活を豊かにすることを目指しています。',
       enterShop: '쇼핑 시작',
-      productsTitle: '제품',
+      productsTitle: '製品',
       addToCart: '장바구니에 추가',
       viewCart: '장바구니 보기',
       cartTitle: '장바구니',
@@ -706,8 +706,8 @@ function App() {
       />
       <div className="p-5 flex flex-col flex-grow">
         <h3 className="text-xl font-semibold text-purple-300 mb-2">{product.name[lang] || product.name.ja || product.name}</h3> {/* 顯示翻譯後的名稱 */}
-        {/* 顯示商品簡介 */}
-        <p className="text-gray-400 text-sm mb-3 flex-grow">{product.shortDescription[lang] || product.shortDescription.ja || translations[lang].productDescription}</p> {/* 顯示翻譯後的簡介 */}
+        {/* 顯示商品簡介，並保留換行 */}
+        <p className="text-gray-400 text-sm mb-3 flex-grow whitespace-pre-wrap">{product.shortDescription[lang] || product.shortDescription.ja || translations[lang].productDescription}</p> {/* 顯示翻譯後的簡介 */}
         <div className="flex justify-between items-center mt-auto gap-x-6"> {/* 增加價格與按鈕間距 */}
           <span className="text-2xl font-bold text-red-400">¥{product.price}</span>
           <button
@@ -925,6 +925,85 @@ function App() {
     );
   };
 
+  // 輔助函數：渲染包含影片的詳細介紹
+  const renderDetailedDescription = (description, lang, translations) => {
+    // 如果沒有 description 或者 description 不是物件 (舊資料可能不是多語言物件)
+    const currentLangDescription = description ? (description[lang] || description.ja || description) : '';
+
+    if (!currentLangDescription) {
+      return <p className="text-gray-300 text-lg whitespace-pre-wrap">{translations[lang].productDescription}</p>;
+    }
+
+    const elements = [];
+    const lines = currentLangDescription.split('\n');
+
+    lines.forEach((line, lineIndex) => {
+      const lineElements = [];
+      let lastIndex = 0;
+
+      // Combined regex for YouTube and GitHub raw video.
+      // Group 1: full match, Group 2: YouTube ID, Group 3: GitHub raw video URL
+      const combinedVideoRegex = /(?:(?:https?:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=|embed\/|v\/|)([\w-]{11})(?:\S+)?)|((?:https:\/\/raw\.githubusercontent\.com\/[^\s]+\.(?:mp4|webm|ogg|mov|avi|flv|wmv|mkv|3gp|m4v))(?:\s|$))/gi;
+
+      let match;
+      // Reset regex lastIndex for each line
+      combinedVideoRegex.lastIndex = 0;
+
+      while ((match = combinedVideoRegex.exec(line)) !== null) {
+        // Add text before the current match
+        if (match.index > lastIndex) {
+          lineElements.push(<span key={`text-${lineIndex}-${lastIndex}`}>{line.substring(lastIndex, match.index)}</span>);
+        }
+
+        // Handle YouTube match
+        if (match[1]) { // YouTube ID
+          const videoId = match[1];
+          lineElements.push(
+            <div key={`youtube-${lineIndex}-${match.index}`} className="my-2 aspect-video w-full max-w-full mx-auto rounded-lg overflow-hidden shadow-xl">
+              <iframe
+                className="w-full h-full"
+                src={`https://www.youtube.com/embed/${videoId}`}
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                title="YouTube video player"
+                loading="lazy"
+              ></iframe>
+            </div>
+          );
+        }
+        // Handle GitHub raw video match
+        else if (match[2]) { // GitHub raw video URL
+          const videoUrl = match[2];
+          lineElements.push(
+            <div key={`github-${lineIndex}-${match.index}`} className="my-2 w-full max-w-full mx-auto rounded-lg overflow-hidden shadow-xl">
+              <video controls className="w-full h-auto rounded-lg" src={videoUrl}>
+                您的瀏覽器不支持影片標籤。
+              </video>
+            </div>
+          );
+        }
+        lastIndex = combinedVideoRegex.lastIndex;
+      }
+
+      // Add any remaining text after the last match
+      if (lastIndex < line.length) {
+        lineElements.push(<span key={`text-end-${lineIndex}-${lastIndex}`}>{line.substring(lastIndex)}</span>);
+      }
+
+      // Push the processed line elements to the main elements array
+      elements.push(<React.Fragment key={`line-${lineIndex}`}>{lineElements}</React.Fragment>);
+
+      // Add a <br /> for each line break, except for the last one
+      if (lineIndex < lines.length - 1) {
+        elements.push(<br key={`br-${lineIndex}`} />);
+      }
+    });
+
+    return <p className="text-gray-300 text-lg whitespace-pre-wrap">{elements}</p>;
+  };
+
+
   // 商品詳情頁面組件
   const ProductDetailPage = ({ productId, productsData, onBackToShop, onAddToCart, lang, translations }) => {
     const product = productsData.find(p => p.id === productId);
@@ -977,7 +1056,8 @@ function App() {
             <div className="w-full md:w-1/2">
               <h1 className="text-4xl font-extrabold text-red-400 mb-4">{product.name[lang] || product.name.ja || product.name}</h1> {/* 顯示翻譯後的名稱 */}
               <p className="text-purple-300 text-2xl font-bold mb-4">¥{product.price}</p>
-              <p className="text-gray-300 text-lg mb-6">{product.detailedDescription[lang] || product.detailedDescription.ja || translations[lang].productDescription}</p> {/* 顯示翻譯後的詳細介紹 */}
+              {/* 使用 renderDetailedDescription 函數來渲染詳細介紹 */}
+              {renderDetailedDescription(product.detailedDescription, lang, translations)}
               <p className="text-gray-400 text-md mb-8">分類: {displayCategory}</p> {/* 顯示翻譯後的分類 */}
               <button
                 onClick={() => onAddToCart(product)}
@@ -1077,10 +1157,10 @@ function App() {
           const translatedShortDescription = await translateText(shortDescription, langCode, sourceLang);
           const translatedDetailedDescription = await translateText(detailedDescription, langCode, sourceLang);
 
-          // 檢查翻譯是否成功 (如果返回原始文字，則視為失敗)
-          if (translatedName === name && name !== "") translationSuccess = false;
-          if (translatedShortDescription === shortDescription && shortDescription !== "") translationSuccess = false;
-          if (translatedDetailedDescription === detailedDescription && detailedDescription !== "") translationSuccess = false;
+          // 檢查翻譯是否成功 (如果返回原始文字，且原始文字不為空，則視為失敗)
+          if (name !== "" && translatedName === name) translationSuccess = false;
+          if (shortDescription !== "" && translatedShortDescription === shortDescription) translationSuccess = false;
+          if (detailedDescription !== "" && translatedDetailedDescription === detailedDescription) translationSuccess = false;
 
           productData.name[langCode] = translatedName;
           productData.shortDescription[langCode] = translatedShortDescription;
@@ -1334,7 +1414,7 @@ function App() {
                   <div className="flex-grow">
                     <h4 className="text-xl font-semibold text-red-300">{product.name[lang] || product.name.ja || product.name}</h4> {/* 顯示翻譯後的名稱 */}
                     <p className="text-gray-400">¥{product.price} | {categoryOptionsMap[product.category] || product.category}</p> {/* 顯示翻譯後的分類 */}
-                    <p className="text-gray-500 text-sm italic">{product.shortDescription[lang] || product.shortDescription.ja || ''}</p> {/* 顯示翻譯後的簡介 */}
+                    <p className="text-gray-500 text-sm italic whitespace-pre-wrap">{product.shortDescription[lang] || product.shortDescription.ja || ''}</p> {/* 顯示翻譯後的簡介，保留換行 */}
                   </div>
                   <div className="flex space-x-2">
                     <button
