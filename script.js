@@ -395,9 +395,10 @@ function App() {
   const [showPasswordModal, setShowPasswordModal] = useState(false); // 控制密碼輸入框顯示
   const [passwordInput, setPasswordInput] = useState(''); // 密碼輸入框的值
   const [passwordError, setPasswordError] = useState(''); // 密碼錯誤訊息
+  const [isYouTubeAPIReady, setIsYouTubeAPIReady] = useState(false); // YouTube API 是否準備就緒
 
   // 新增影片 URL 狀態
-  const [ceoVideoUrl, setCeoVideoUrl] = useState('https://raw.githubusercontent.com/jiajun1208/femaleagentunit/main/video/CEO.mp4'); // 示例影片，請替換
+   const [ceoVideoUrl, setCeoVideoUrl] = useState('https://raw.githubusercontent.com/jiajun1208/femaleagentunit/main/video/CEO.mp4'); // 示例影片，請替換
 
   // 廣告影片輪播相關狀態
   const adVideoUrls = useRef([
@@ -494,6 +495,18 @@ function App() {
         console.warn("App useEffect: Firebase initialization skipped due to missing or invalid configuration.");
         setIsFirebaseReady(false);
     }
+
+    // 設定 YouTube API readiness callback
+    window.onYouTubeIframeAPIReady = () => {
+      console.log("YouTube IFrame API is ready.");
+      setIsYouTubeAPIReady(true);
+    };
+
+    // 如果 YouTube API 已經載入 (例如，組件在初始載入後重新掛載)
+    if (window.YT && window.YT.Player) {
+      setIsYouTubeAPIReady(true);
+    }
+
   }, []); // 只在組件掛載時運行一次
 
   // 從 Firestore 實時獲取商品數據
@@ -530,17 +543,6 @@ function App() {
         console.log("Products useEffect: Firebase not ready, skipping product fetch.");
     }
   }, [isFirebaseReady, db]); // 依賴於 Firebase 是否準備好和 db 實例
-
-  // 廣告影片輪播效果
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentAdVideoIndex((prevIndex) =>
-        (prevIndex + 1) % adVideoUrls.current.length
-      );
-    }, 10000); // 每 10 秒切換一次影片
-
-    return () => clearInterval(interval); // 清理定時器
-  }, []);
 
   // 語言切換邏輯
   const handleLanguageChange = () => {
@@ -804,9 +806,64 @@ function App() {
   };
 
   // 購物頁面組件
-  const ShopPage = ({ products, onAddToCart, cartCount, onViewCart, lang, translations, onCategoryChange, selectedCategory, onViewIntro, onNavigateToAdmin, onProductClick, adVideoUrl }) => { // 傳遞 adVideoUrl
-    const youtubeVideoId = getYouTubeVideoId(adVideoUrl);
+  const ShopPage = ({ products, onAddToCart, cartCount, onViewCart, lang, translations, onCategoryChange, selectedCategory, onViewIntro, onNavigateToAdmin, onProductClick, adVideoUrls, currentAdVideoIndex, isYouTubeAPIReady, setCurrentAdVideoIndex }) => {
+    const currentAdVideoUrl = adVideoUrls.current[currentAdVideoIndex];
+    const youtubeVideoId = getYouTubeVideoId(currentAdVideoUrl);
     const isYouTubeAd = youtubeVideoId !== null;
+
+    const videoRef = useRef(null); // Ref for direct video element
+    const youtubePlayerRef = useRef(null); // Ref for YouTube Player instance
+
+    useEffect(() => {
+      // Cleanup function for previous player/listeners
+      return () => {
+        if (youtubePlayerRef.current) {
+          youtubePlayerRef.current.destroy();
+          youtubePlayerRef.current = null;
+        }
+        if (videoRef.current) {
+          videoRef.current.onended = null; // Remove event listener
+        }
+      };
+    }, [currentAdVideoIndex]); // Re-run effect when currentAdVideoIndex changes
+
+    useEffect(() => {
+      if (isYouTubeAd && isYouTubeAPIReady) {
+        // Initialize YouTube Player
+        youtubePlayerRef.current = new window.YT.Player('youtube-ad-player', {
+          videoId: youtubeVideoId,
+          playerVars: {
+            autoplay: 1,
+            mute: 1,
+            loop: 1,
+            playlist: youtubeVideoId, // Required for loop=1 to work with a single video
+            controls: 1,
+            modestbranding: 1,
+            enablejsapi: 1, // Enable JS API control
+          },
+          events: {
+            'onReady': (event) => {
+              event.target.playVideo(); // Ensure playback starts
+            },
+            'onStateChange': (event) => {
+              if (event.data === window.YT.PlayerState.ENDED) {
+                setCurrentAdVideoIndex((prevIndex) =>
+                  (prevIndex + 1) % adVideoUrls.current.length
+                );
+              }
+            }
+          }
+        });
+      } else if (!isYouTubeAd && videoRef.current) {
+        // For regular video, attach onEnded listener
+        videoRef.current.onended = () => {
+          setCurrentAdVideoIndex((prevIndex) =>
+            (prevIndex + 1) % adVideoUrls.current.length
+          );
+        };
+      }
+    }, [currentAdVideoIndex, isYouTubeAd, isYouTubeAPIReady]); // Dependencies for player initialization
+
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-purple-900 text-white flex flex-col">
@@ -862,14 +919,16 @@ function App() {
         </header>
 
         {/* 廣告影片欄位 */}
-        {adVideoUrl && (
+        {currentAdVideoUrl && (
           <div className="w-full bg-gray-800 p-4 md:p-6 lg:p-8 shadow-inner border-b border-purple-700 text-center">
             <h2 className="text-2xl font-bold text-purple-400 mb-4">{translations[lang].advertisement}</h2>
             <div className="relative w-full max-w-4xl mx-auto aspect-video rounded-xl overflow-hidden shadow-2xl border-2 border-red-500">
               {isYouTubeAd ? (
                 <iframe
+                  key={youtubeVideoId} // Key to force re-render
                   className="w-full h-full"
-                  src={`https://www.youtube.com/embed/$${youtubeVideoId}?autoplay=1&mute=1&loop=1&playlist=${youtubeVideoId}&controls=1&modestbranding=1`}
+                  id="youtube-ad-player" // Assign an ID for YT.Player
+                  src={`https://www.youtube.com/embed/${youtubeVideoId}?enablejsapi=1&autoplay=1&mute=1&loop=1&playlist=${youtubeVideoId}&controls=1&modestbranding=1`}
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
@@ -878,8 +937,10 @@ function App() {
                 ></iframe>
               ) : (
                 <video
+                  key={currentAdVideoUrl} // Key to force re-render
+                  ref={videoRef} // Attach ref for direct video
                   className="w-full h-full object-cover"
-                  src={adVideoUrl}
+                  src={currentAdVideoUrl}
                   controls
                   autoPlay
                   loop
@@ -1044,7 +1105,7 @@ function App() {
             <div key={`youtube-${lineIndex}-${match.index}`} className="my-2 aspect-video w-full max-w-full mx-auto rounded-lg overflow-hidden shadow-xl">
               <iframe
                 className="w-full h-full"
-                src={`https://www.youtube.com/embed/$${videoId}`}
+                src={`https://www.youtube.com/embed/${videoId}`}
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
@@ -1547,7 +1608,10 @@ function App() {
           onViewIntro={() => setCurrentPage('intro')}
           onNavigateToAdmin={handleNavigateToAdmin}
           onProductClick={handleProductClick}
-          adVideoUrl={adVideoUrls.current[currentAdVideoIndex]} // 使用當前輪播的影片 URL
+          adVideoUrls={adVideoUrls} // 傳遞 useRef
+          currentAdVideoIndex={currentAdVideoIndex} // 傳遞當前索引
+          isYouTubeAPIReady={isYouTubeAPIReady} // 傳遞 YouTube API 準備狀態
+          setCurrentAdVideoIndex={setCurrentAdVideoIndex} // 傳遞更新索引的函數
         />
       )}
       {currentPage === 'checkout' && (
@@ -1610,5 +1674,6 @@ function App() {
 
 // Render the App component into the root div
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
 
 
