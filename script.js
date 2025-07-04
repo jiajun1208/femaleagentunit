@@ -131,9 +131,6 @@ function App() {
       introTitle: 'ようこそ FAU SHOPPING へ',
       ceoProfileTitle: '社長紹介',
       companyProfileTitle: '会社概要',
-      ceoName: '黒川 智慧',
-      ceoBio: '黒川グループの会長である黒川智慧は、革新的なリーダーシップと卓越したビジョンで知られています。彼の指導の下、当社は技術と顧客満足度の新たな基準を確立しました。',
-      companyBio: '黒川グループは、高品質な製品と優れた顧客サービスを提供することに専念する最先端の企業です。私たちは革新を推進し、お客様の生活を豊かにすることを目指しています。',
       enterShop: 'ショッピングを始める',
       productsTitle: '商品一覧',
       addToCart: 'カートに追加',
@@ -193,9 +190,6 @@ function App() {
       introTitle: 'Welcome to FAU SHOPPING',
       ceoProfileTitle: 'CEO Profile',
       companyProfileTitle: 'Company Profile',
-      ceoName: 'Kurokawa Chie',
-      ceoBio: 'Kurokawa Chie, the Chairman of Kurokawa Group, is known for his innovative leadership and exceptional vision. Under his guidance, the company has set new standards in technology and customer satisfaction.',
-      companyBio: 'Kurokawa Group is a cutting-edge enterprise dedicated to providing high-quality products and excellent customer service. We strive to drive innovation and enrich the lives of our customers.',
       enterShop: 'Enter Shop',
       productsTitle: 'Our Products',
       addToCart: 'Add to Cart',
@@ -255,9 +249,6 @@ function App() {
       introTitle: '歡迎來到 FAU SHOPPING',
       ceoProfileTitle: '社長簡介',
       companyProfileTitle: '公司簡介',
-      ceoName: '黑川 智慧',
-      ceoBio: '黑川集團董事長黑川智慧以其創新的領導力和卓越的遠見而聞聞。在他的指導下，公司在技術和客戶滿意度方面樹立了新的標準。',
-      companyBio: '黑川集團是一家致力於提供高品質產品和卓越客戶服務的尖端企業。我們致力於推動創新，豐富客戶的生活。',
       enterShop: '進入購物頁面',
       productsTitle: '我們的產品',
       addToCart: '加入購物車',
@@ -317,9 +308,6 @@ function App() {
       introTitle: '欢迎来到 FAU SHOPPING',
       ceoProfileTitle: '社长简介',
       companyProfileTitle: '公司简介',
-      ceoName: '黑川 智慧',
-      ceoBio: '黑川集团董事长黑川智慧以其创新的领导力和卓越的远见而闻名。在他的指导下，公司在技术和客户满意度方面树立了新的标准。',
-      companyBio: '黑川集团是一家致力于提供高质量产品和卓越客户服务的尖端企业。我们致力于推动创新，丰富客户的生活。',
       enterShop: '进入购物页面',
       productsTitle: '我们的产品',
       addToCart: '加入购物车',
@@ -350,9 +338,6 @@ function App() {
       introTitle: 'FAU SHOPPING에 오신 것을 환영합니다',
       ceoProfileTitle: 'CEO 프로필',
       companyProfileTitle: '회사 프로필',
-      ceoName: '쿠로카와 치에',
-      ceoBio: '쿠로카와 그룹의 회장인 쿠로카와 치에는 혁신적인 리더십과 탁월한 비전으로 유명합니다. 그의 지도 아래 회사는 기술과 고객 만족도에서 새로운 기준을 세웠습니다.',
-      companyBio: '쿠로카와 그룹은 고품질 제품과 우수한 고객 서비스를 제공하는 데 전념하는 최첨단 기업입니다。私たちは革新を推進し、お客様の生活を豊かにすることを目指しています。',
       enterShop: '쇼핑 시작',
       productsTitle: '제품',
       addToCart: '장바구니에 추가',
@@ -408,6 +393,13 @@ function App() {
       'https://raw.githubusercontent.com/mdn/learning-area/main/html/multimedia-and-embedding/video-and-audio-content/rabbit320.mp4' // 範例 MP4 影片
   ]);
   const [currentAdVideoIndex, setCurrentAdVideoIndex] = useState(0);
+
+  // 可配置的應用程式內容狀態 (社長姓名、簡介、公司簡介)
+  const [appContent, setAppContent] = useState({
+    ceoName: {},
+    ceoBio: {},
+    companyBio: {}
+  });
 
   // 硬編碼的 Firebase 配置 (請務必替換為您自己的專案詳細資訊)
   // 您可以在 Firebase 控制台 (console.firebase.google.com) > 專案設定 (Project settings) > 您的應用程式 (Your apps) 中找到這些資訊。
@@ -510,38 +502,64 @@ function App() {
 
   }, []); // 只在組件掛載時運行一次
 
-  // 從 Firestore 實時獲取商品數據
+  // 從 Firestore 實時獲取商品數據和應用程式內容
   useEffect(() => {
-    console.log("Products useEffect: isFirebaseReady status:", isFirebaseReady);
+    console.log("Data useEffect: isFirebaseReady status:", isFirebaseReady);
     if (isFirebaseReady && db) {
-      // 確保 __app_id 變數存在
       const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-      console.log("Products useEffect: Using appId for Firestore path:", appId);
+      console.log("Data useEffect: Using appId for Firestore path:", appId);
 
-      // Firestore 路徑調整為 /artifacts/{appId}/public/data/products
+      // 1. 監聽商品數據
       const productsColRef = window.firebase.collection(db, `artifacts/${appId}/public/data/products`);
-      
-      console.log("Products useEffect: Setting up onSnapshot listener for products...");
-      const unsubscribe = window.firebase.onSnapshot(productsColRef, (snapshot) => {
+      console.log("Data useEffect: Setting up onSnapshot listener for products...");
+      const unsubscribeProducts = window.firebase.onSnapshot(productsColRef, (snapshot) => {
         const productsList = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         }));
         setProductsData(productsList);
-        console.log("Products useEffect: Products fetched from Firestore:", productsList);
+        console.log("Data useEffect: Products fetched from Firestore:", productsList);
       }, (error) => {
-        console.error("Products useEffect: Error fetching products from Firestore:", error);
+        console.error("Data useEffect: Error fetching products from Firestore:", error);
       });
+
+      // 2. 監聽應用程式內容 (社長、公司簡介)
+      const appSettingsDocRef = window.firebase.doc(db, `artifacts/${appId}/public/data/appSettings/introContent`);
+      console.log("Data useEffect: Setting up onSnapshot listener for app content...");
+      const unsubscribeAppSettings = window.firebase.onSnapshot(appSettingsDocRef, (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setAppContent(prev => ({
+            ...prev,
+            ceoName: data.ceoName || {},
+            ceoBio: data.ceoBio || {},
+            companyBio: data.companyBio || {}
+          }));
+          console.log("Data useEffect: App content fetched from Firestore:", data);
+        } else {
+          console.log("Data useEffect: No app content found in Firestore. Using defaults.");
+          // 如果 Firestore 中沒有內容，則設定預設值
+          setAppContent({
+            ceoName: { ja: '黒川 智慧', en: 'Kurokawa Chie', 'zh-tw': '黑川 智慧', 'zh-cn': '黑川 智慧', ko: '쿠로카와 치에' },
+            ceoBio: { ja: '黒川グループの会長である黒川智慧は、革新的なリーダーシップと卓越したビジョンで知られています。彼の指導の下、当社は技術と顧客満足度の新たな基準を確立しました。', en: 'Kurokawa Chie, the Chairman of Kurokawa Group, is known for his innovative leadership and exceptional vision. Under his guidance, the company has set new standards in technology and customer satisfaction.', 'zh-tw': '黑川集團董事長黑川智慧以其創新的領導力和卓越的遠見而聞聞。在他的指導下，公司在技術和客戶滿意度方面樹立了新的標準。', 'zh-cn': '黑川集团董事长黑川智慧以其创新的领导力和卓越的远见而闻名。在他的指导下，公司在技术和客户满意度方面树立了新的标准。', ko: '쿠로카와 그룹의 회장인 쿠로카와 치에는 혁신적인 리더십과 탁월한 비전으로 유명합니다. 그의 지도 아래 회사는 기술과 고객 만족도에서 새로운 기준을 세웠습니다。' },
+            companyBio: { ja: '黒川グループは、高品質な製品と優れた顧客サービスを提供することに専念する最先端の企業です。私たちは革新を推進し、お客様の生活を豊かにすることを目指しています。', en: 'Kurokawa Group is a cutting-edge enterprise dedicated to providing high-quality products and excellent customer service. We strive to drive innovation and enrich the lives of our customers.', 'zh-tw': '黑川集團是一家致力於提供高品質產品和卓越客戶服務的尖端企業。我們致力於推動創新，豐富客戶的生活。', 'zh-cn': '黑川集团是一家致力于提供高质量产品和卓越客户服务的尖端企业。我们致力于推动创新，丰富客户的生活。', ko: '쿠로카와 그룹은 고품질 제품과 우수한 고객 서비스를 제공하는 데 전념하는 최첨단 기업입니다。우리는 혁신을 추진하고 고객의 삶을 풍요롭게 하는 것을 목표로 합니다。' }
+          });
+        }
+      }, (error) => {
+        console.error("Data useEffect: Error fetching app content from Firestore:", error);
+      });
+
 
       // 清理訂閱
       return () => {
-        console.log("Products useEffect: Cleaning up onSnapshot listener.");
-        unsubscribe();
+        console.log("Data useEffect: Cleaning up onSnapshot listeners.");
+        unsubscribeProducts();
+        unsubscribeAppSettings();
       };
     } else if (isFirebaseReady && !db) {
-        console.warn("Products useEffect: Firebase is ready, but db instance is null.");
+        console.warn("Data useEffect: Firebase is ready, but db instance is null.");
     } else {
-        console.log("Products useEffect: Firebase not ready, skipping product fetch.");
+        console.log("Data useEffect: Firebase not ready, skipping data fetch.");
     }
   }, [isFirebaseReady, db]); // 依賴於 Firebase 是否準備好和 db 實例
 
@@ -745,7 +763,7 @@ function App() {
   );
 
   // 簡介頁面組件
-  const IntroPage = ({ onEnterShop, lang, translations, ceoVideoUrl }) => ( // 傳遞 ceoVideoUrl
+  const IntroPage = ({ onEnterShop, lang, translations, ceoVideoUrl, appContent }) => ( // 傳遞 appContent
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-purple-900 text-white flex flex-col items-center p-4 overflow-y-auto"> {/* 允許滾動 */}
       <div className="bg-gray-800 bg-opacity-90 rounded-2xl shadow-2xl p-8 md:p-12 max-w-4xl w-full text-center border border-purple-700 flex flex-col flex-grow">
         <div className="flex-grow flex flex-col justify-center items-center"> {/* 內容區塊 */}
@@ -774,14 +792,14 @@ function App() {
                 <span className="text-purple-400 mx-auto mb-4 text-4xl">👤</span> // Fallback icon
               )}
               <h2 className="text-3xl font-bold text-purple-300 mb-4">{translations[lang].ceoProfileTitle}</h2>
-              <h3 className="text-2xl font-semibold text-red-300 mb-2">{translations[lang].ceoName}</h3>
-              <p className="text-gray-300 leading-relaxed">{translations[lang].ceoBio}</p>
+              <h3 className="text-2xl font-semibold text-red-300 mb-2">{appContent.ceoName[lang] || appContent.ceoName.ja || '社長姓名'}</h3> {/* 使用動態內容 */}
+              <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">{appContent.ceoBio[lang] || appContent.ceoBio.ja || '社長簡介內容'}</p> {/* 使用動態內容 */}
             </div>
 
             <div className="bg-gray-900 p-6 rounded-xl shadow-lg border border-purple-800 transform hover:scale-105 transition-transform duration-300">
               <span className="text-purple-400 mx-auto mb-4 text-4xl">🏢</span> {/* Building icon */}
               <h2 className="text-3xl font-bold text-purple-300 mb-4">{translations[lang].companyProfileTitle}</h2>
-              <p className="text-gray-300 leading-relaxed">{translations[lang].companyBio}</p>
+              <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">{appContent.companyBio[lang] || appContent.companyBio.ja || '公司簡介內容'}</p> {/* 使用動態內容 */}
             </div>
           </div>
         </div>
@@ -1215,7 +1233,7 @@ function App() {
 
 
   // 管理後台頁面組件
-  const AdminPage = ({ products, lang, translations, onBackToShop, isFirebaseReady, currentLanguage }) => { // 傳遞 currentLanguage
+  const AdminPage = ({ products, lang, translations, onBackToShop, isFirebaseReady, currentLanguage, appContent }) => { // 傳遞 currentLanguage, appContent
     const [editingProduct, setEditingProduct] = useState(null); // null for add, product object for edit
     const [name, setName] = useState('');
     const [price, setPrice] = useState('');
@@ -1226,6 +1244,12 @@ function App() {
     const [detailedDescription, setDetailedDescription] = useState(''); // 新增詳細介紹狀態
     const [message, setMessage] = useState(''); // Feedback message
     const [isTranslating, setIsTranslating] = useState(false); // 新增翻譯狀態
+
+    // 新增用於「關於我們」內容的狀態
+    const [adminCeoName, setAdminCeoName] = useState('');
+    const [adminCeoBio, setAdminCeoBio] = useState('');
+    const [adminCompanyBio, setAdminCompanyBio] = useState('');
+
 
     useEffect(() => {
       if (editingProduct) {
@@ -1247,6 +1271,14 @@ function App() {
         setDetailedDescription('');
       }
     }, [editingProduct, lang]); // 依賴於 editingProduct 和 lang
+
+    // 當 appContent 改變時，更新「關於我們」的編輯欄位
+    useEffect(() => {
+      setAdminCeoName(appContent.ceoName[lang] || appContent.ceoName.ja || '');
+      setAdminCeoBio(appContent.ceoBio[lang] || appContent.ceoBio.ja || '');
+      setAdminCompanyBio(appContent.companyBio[lang] || appContent.companyBio.ja || '');
+    }, [appContent, lang]);
+
 
     const showMessage = (msg) => {
       setMessage(msg);
@@ -1365,6 +1397,58 @@ function App() {
         }
       }
     };
+
+    // 處理儲存「關於我們」內容
+    const handleSaveAboutUsContent = async (e) => {
+      e.preventDefault();
+      if (!db) {
+        showMessage("Firestore 未初始化，無法操作。請檢查 Firebase 設定。");
+        return;
+      }
+
+      setIsTranslating(true);
+      showMessage("正在翻譯關於我們內容...");
+
+      const newAppContentData = {
+        ceoName: {},
+        ceoBio: {},
+        companyBio: {}
+      };
+
+      const sourceLang = currentLanguage;
+      const targetLanguages = ['ja', 'en', 'zh-tw', 'zh-cn', 'ko'];
+
+      let translationSuccess = true;
+      try {
+        for (const langCode of targetLanguages) {
+          newAppContentData.ceoName[langCode] = await translateText(adminCeoName, langCode, sourceLang);
+          newAppContentData.ceoBio[langCode] = await translateText(adminCeoBio, langCode, sourceLang);
+          newAppContentData.companyBio[langCode] = await translateText(adminCompanyBio, langCode, sourceLang);
+
+          // 檢查翻譯是否成功 (如果返回原始文字，且原始文字不為空，則視為失敗)
+          if (adminCeoName !== "" && newAppContentData.ceoName[langCode] === adminCeoName) translationSuccess = false;
+          if (adminCeoBio !== "" && newAppContentData.ceoBio[langCode] === adminCeoBio) translationSuccess = false;
+          if (adminCompanyBio !== "" && newAppContentData.companyBio[langCode] === adminCompanyBio) translationSuccess = false;
+        }
+
+        if (!translationSuccess) {
+            console.warn("AdminPage: Some translations for about us content might have failed.");
+            showMessage(translations[lang].translationFailed);
+        }
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const appSettingsDocRef = window.firebase.doc(db, `artifacts/${appId}/public/data/appSettings/introContent`);
+        await window.firebase.setDoc(appSettingsDocRef, newAppContentData);
+        if (translationSuccess) showMessage("關於我們內容已更新！");
+        console.log("AdminPage: About us content updated successfully.");
+      } catch (error) {
+        console.error("AdminPage: Error updating about us content:", error);
+        showMessage("更新關於我們內容失敗：" + error.message);
+      } finally {
+        setIsTranslating(false);
+      }
+    };
+
 
     if (!isFirebaseReady) {
       return (
@@ -1534,6 +1618,61 @@ function App() {
             </div>
           </form>
 
+          {/* 新增：設定關於我們內容表單 */}
+          <form onSubmit={handleSaveAboutUsContent} className="bg-gray-900 p-6 rounded-xl shadow-lg mb-8 border border-purple-800">
+            <h3 className="text-2xl font-bold text-purple-300 mb-6">設定關於我們內容</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label htmlFor="adminCeoName" className="block text-gray-300 text-sm font-semibold mb-1">
+                  社長姓名:
+                </label>
+                <input
+                  type="text"
+                  id="adminCeoName"
+                  value={adminCeoName}
+                  onChange={(e) => setAdminCeoName(e.target.value)}
+                  className="w-full p-3 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
+                  required
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label htmlFor="adminCeoBio" className="block text-gray-300 text-sm font-semibold mb-1">
+                  社長簡介:
+                </label>
+                <textarea
+                  id="adminCeoBio"
+                  value={adminCeoBio}
+                  onChange={(e) => setAdminCeoBio(e.target.value)}
+                  className="w-full p-3 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500 text-white h-32"
+                  placeholder="輸入社長詳細介紹"
+                  required
+                ></textarea>
+              </div>
+              <div className="md:col-span-2">
+                <label htmlFor="adminCompanyBio" className="block text-gray-300 text-sm font-semibold mb-1">
+                  公司簡介:
+                </label>
+                <textarea
+                  id="adminCompanyBio"
+                  value={adminCompanyBio}
+                  onChange={(e) => setAdminCompanyBio(e.target.value)}
+                  className="w-full p-3 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500 text-white h-32"
+                  placeholder="輸入公司詳細介紹"
+                  required
+                ></textarea>
+              </div>
+            </div>
+            <div className="mt-8 flex justify-end">
+              <button
+                type="submit"
+                className="bg-red-600 hover:bg-red-500 text-white px-6 py-3 rounded-full font-semibold transition-colors duration-300 shadow-lg transform hover:scale-105"
+                disabled={isTranslating}
+              >
+                儲存關於我們內容
+              </button>
+            </div>
+          </form>
+
           {/* 商品列表 */}
           <h3 className="text-2xl font-bold text-purple-300 mb-6 mt-8 border-b border-purple-700 pb-3">
             現有商品
@@ -1591,7 +1730,7 @@ function App() {
   return (
     <div className="font-sans antialiased">
       {currentPage === 'intro' && (
-        <IntroPage onEnterShop={() => setCurrentPage('shop')} lang={currentLanguage} translations={translations} ceoVideoUrl={ceoVideoUrl} />
+        <IntroPage onEnterShop={() => setCurrentPage('shop')} lang={currentLanguage} translations={translations} ceoVideoUrl={ceoVideoUrl} appContent={appContent} />
       )}
       {currentPage === 'shop' && (
         <ShopPage
@@ -1628,6 +1767,7 @@ function App() {
           onBackToShop={() => setCurrentPage('shop')}
           isFirebaseReady={isFirebaseReady}
           currentLanguage={currentLanguage}
+          appContent={appContent} // 傳遞 appContent
         />
       )}
       {currentPage === 'productDetail' && (
@@ -1672,3 +1812,4 @@ function App() {
 
 // Render the App component into the root div
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
