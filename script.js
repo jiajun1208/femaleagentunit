@@ -406,6 +406,7 @@ function App() {
   const adVideoUrls = useRef([
       'https://www.youtube.com/watch?v=r7iAasYwWT4', // 範例 YouTube 影片 1
       'https://www.youtube.com/watch?v=83x093Aq4Kk', // 範例 YouTube 影片 2
+      'https://www.youtube.com/watch?v=D42i_4Od1pQ', // 範例 YouTube 影片 3
   ]);
   const [currentAdVideoIndex, setCurrentAdVideoIndex] = useState(0);
 
