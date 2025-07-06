@@ -143,6 +143,7 @@ function App() {
       submit: '送信',
       translationFailed: '翻譯失敗，請檢查網路連線或稍後再試。', // 雖然不使用自動翻譯，但保留此鍵以防萬一
       advertisement: '廣告',
+      selectLanguage: '語言選擇', // 新增
     },
     en: {
       appName: 'FAU SHOPPING',
@@ -202,6 +203,7 @@ function App() {
       submit: 'Submit',
       translationFailed: 'Translation failed, please check network or try again later.',
       advertisement: 'Advertisement',
+      selectLanguage: 'Select Language', // 新增
     },
     'zh-tw': {
       appName: 'FAU SHOPPING',
@@ -261,6 +263,7 @@ function App() {
       submit: '提交',
       translationFailed: '翻譯失敗，請檢查網路連線或稍後再試。',
       advertisement: '廣告',
+      selectLanguage: '選擇語言', // 新增
     },
     'zh-cn': {
       appName: 'FAU SHOPPING',
@@ -320,6 +323,7 @@ function App() {
       submit: '提交',
       translationFailed: '翻译失败，请检查网络连接或稍后重试。',
       advertisement: '广告',
+      selectLanguage: '选择语言', // 新增
     },
     ko: {
       appName: 'FAU SHOPPING',
@@ -379,11 +383,12 @@ function App() {
       submit: '제출',
       translationFailed: '번역에 실패했습니다. 네트워크 연결을 확인하거나 나중에 다시 시도하세요.',
       advertisement: '광고',
+      selectLanguage: '언어 선택', // 新增
     },
   };
 
   // 狀態管理：當前頁面、購物車、當前語言、購物車彈窗是否顯示、選定的商品分類
-  const [currentPage, setCurrentPage] = useState('intro'); // 'intro', 'shop', 'checkout', 'admin', 'productDetail'
+  const [currentPage, setCurrentPage] = useState('welcome'); // 初始頁面改為 'welcome'
   const [cart, setCart] = useState([]);
   const [currentLanguage, setCurrentLanguage] = useState('ja'); // 預設日文
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -431,6 +436,39 @@ function App() {
       appId: "1:686829295344:web:f0928898f8af0ab3701435",
       measurementId: "G-QQYT04PKLL"
   };
+
+  // 匯率 (相對於日圓 JPY)
+  const currencyRates = {
+    ja: 1,      // JPY
+    en: 0.0064, // 1 JPY ≈ 0.0064 USD (1 USD ≈ 156 JPY)
+    'zh-tw': 0.207, // 1 JPY ≈ 0.207 TWD (1 TWD ≈ 4.8 JPY)
+    'zh-cn': 0.046, // 1 JPY ≈ 0.046 CNY (1 CNY ≈ 21.5 JPY)
+    ko: 8.8,    // 1 JPY ≈ 8.8 KRW (1 KRW ≈ 0.11 JPY)
+  };
+
+  // 幣別符號
+  const currencySymbols = {
+    ja: '¥',
+    en: '$',
+    'zh-tw': 'NT$',
+    'zh-cn': '¥',
+    ko: '₩',
+  };
+
+  // 輔助函數：根據當前語言獲取顯示價格和符號
+  const getDisplayPrice = (priceInJPY, lang) => {
+    const rate = currencyRates[lang] || 1; // 如果沒有找到匯率，預設為 1 (JPY)
+    const symbol = currencySymbols[lang] || '¥'; // 如果沒有找到符號，預設為 '¥'
+
+    const convertedPrice = priceInJPY * rate;
+    // 對於 JPY 和 KRW，通常不顯示小數點；其他幣別顯示兩位小數
+    const formattedPrice = (lang === 'ja' || lang === 'ko')
+      ? Math.round(convertedPrice).toLocaleString(lang)
+      : convertedPrice.toFixed(2).toLocaleString(lang);
+
+    return `${symbol}${formattedPrice}`;
+  };
+
 
   // 載入 Firebase 配置並初始化 Firebase
   useEffect(() => {
@@ -583,11 +621,8 @@ function App() {
   }, [isFirebaseReady, db]); // 依賴於 Firebase 是否準備好和 db 實例
 
   // 語言切換邏輯
-  const handleLanguageChange = () => {
-    const languages = ['ja', 'en', 'zh-tw', 'zh-cn', 'ko'];
-    const currentIndex = languages.indexOf(currentLanguage);
-    const nextIndex = (currentIndex + 1) % languages.length;
-    setCurrentLanguage(languages[nextIndex]);
+  const handleLanguageChange = (langCode) => {
+    setCurrentLanguage(langCode);
   };
 
   // 將商品添加到購物車
@@ -691,7 +726,7 @@ function App() {
 
 
   // 購物車彈窗組件
-  const CartModal = ({ cartItems, onClose, onRemoveFromCart, onCheckout, lang, translations }) => {
+  const CartModal = ({ cartItems, onClose, onRemoveFromCart, onCheckout, lang, translations, getDisplayPrice }) => {
     const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
     return (
@@ -723,7 +758,7 @@ function App() {
                       />
                       <div>
                         <h3 className="text-lg font-semibold text-purple-300">{item.name[lang] || item.name.ja || item.name}</h3> {/* 顯示翻譯後的名稱 */}
-                        <p className="text-gray-400">{item.quantity} x ¥{item.price}</p>
+                        <p className="text-gray-400">{item.quantity} x {getDisplayPrice(item.price, lang)}</p>
                       </div>
                     </div>
                     <button
@@ -737,7 +772,7 @@ function App() {
               </div>
               <div className="mt-6 pt-4 border-t border-gray-700 flex justify-between items-center text-2xl font-bold">
                 <span>{translations[lang].total}:</span>
-                <span className="text-red-400">¥{total.toFixed(2)}</span>
+                <span className="text-red-400">{getDisplayPrice(total, lang)}</span>
               </div>
               <button
                 onClick={onCheckout}
@@ -753,7 +788,7 @@ function App() {
   };
 
   // 商品卡片組件
-  const ProductCard = ({ product, onAddToCart, lang, translations, onProductClick }) => (
+  const ProductCard = ({ product, onAddToCart, lang, translations, onProductClick, getDisplayPrice }) => (
     <div
       className="bg-gray-800 rounded-xl shadow-lg overflow-hidden transform transition-transform duration-300 hover:scale-105 hover:shadow-2xl flex flex-col cursor-pointer"
       onClick={() => onProductClick(product.id)} // 點擊卡片導航到詳情頁
@@ -769,7 +804,7 @@ function App() {
         {/* 顯示商品簡介，並保留換行 */}
         <p className="text-gray-400 text-sm mb-3 flex-grow whitespace-pre-wrap">{product.shortDescription[lang] || product.shortDescription.ja || translations[lang].productDescription}</p> {/* 顯示翻譯後的簡介 */}
         <div className="flex justify-between items-center mt-auto gap-x-6"> {/* 增加價格與按鈕間距 */}
-          <span className="text-2xl font-bold text-red-400">¥{product.price}</span>
+          <span className="text-2xl font-bold text-red-400">{getDisplayPrice(product.price, lang)}</span>
           <button
             onClick={(e) => { e.stopPropagation(); onAddToCart(product); }} // 阻止事件冒泡，避免點擊按鈕也觸發詳情頁
             className="bg-red-700 hover:bg-red-600 text-white px-5 py-2 rounded-full font-semibold transition-colors duration-300 shadow-md transform hover:scale-105"
@@ -861,7 +896,7 @@ function App() {
   };
 
   // 購物頁面組件
-  const ShopPage = ({ products, onAddToCart, cartCount, onViewCart, lang, translations, onCategoryChange, selectedCategory, onViewIntro, onNavigateToAdmin, onProductClick, adVideoUrls, currentAdVideoIndex, isYouTubeAPIReady, setCurrentAdVideoIndex }) => {
+  const ShopPage = ({ products, onAddToCart, cartCount, onViewCart, lang, translations, onCategoryChange, selectedCategory, onViewIntro, onNavigateToAdmin, onProductClick, adVideoUrls, currentAdVideoIndex, isYouTubeAPIReady, setCurrentAdVideoIndex, getDisplayPrice }) => {
     const currentAdVideoUrl = adVideoUrls.current[currentAdVideoIndex];
     const youtubeVideoId = getYouTubeVideoId(currentAdVideoUrl);
     const isYouTubeAd = youtubeVideoId !== null;
@@ -949,7 +984,12 @@ function App() {
 
             {/* 語言切換按鈕 */}
             <button
-              onClick={handleLanguageChange}
+              onClick={() => {
+                const languages = ['ja', 'en', 'zh-tw', 'zh-cn', 'ko'];
+                const currentIndex = languages.indexOf(lang);
+                const nextIndex = (currentIndex + 1) % languages.length;
+                handleLanguageChange(languages[nextIndex]);
+              }}
               className="bg-purple-700 hover:bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-300 shadow-md"
             >
               {translations[lang].languageOptions[lang]}
@@ -1037,6 +1077,7 @@ function App() {
                 lang={lang}
                 translations={translations}
                 onProductClick={handleProductClick} // 傳遞點擊處理函數
+                getDisplayPrice={getDisplayPrice} // 傳遞價格顯示函數
               />
             ))}
           </div>
@@ -1046,7 +1087,7 @@ function App() {
   };
 
   // 結帳頁面組件
-  const CheckoutPage = ({ cartItems, onBackToShop, lang, translations }) => {
+  const CheckoutPage = ({ cartItems, onBackToShop, lang, translations, getDisplayPrice }) => {
     const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
     // 訂單成功訊息的顯示邏輯
@@ -1081,10 +1122,10 @@ function App() {
                     />
                     <div>
                       <h3 className="text-xl font-semibold text-purple-300">{item.name[lang] || item.name.ja || item.name}</h3> {/* 顯示翻譯後的名稱 */}
-                      <p className="text-gray-400">{item.quantity} x ¥{item.price}</p>
+                      <p className="text-gray-400">{item.quantity} x {getDisplayPrice(item.price, lang)}</p>
                     </div>
                   </div>
-                  <span className="text-xl font-bold text-red-400">¥{(item.quantity * item.price).toFixed(2)}</span>
+                  <span className="text-xl font-bold text-red-400">{getDisplayPrice(item.quantity * item.price, lang)}</span>
                 </div>
               ))}
             </div>
@@ -1098,7 +1139,7 @@ function App() {
 
           <div className="mt-6 pt-4 border-t border-gray-700 flex justify-between items-center text-3xl font-bold mb-8">
             <span>{translations[lang].total}:</span>
-            <span className="text-red-400">¥{total.toFixed(2)}</span>
+            <span className="text-red-400">{getDisplayPrice(total, lang)}</span>
           </div>
 
           <div className="flex flex-col sm:flex-row justify-center gap-6">
@@ -1200,7 +1241,7 @@ function App() {
 
 
   // 商品詳情頁面組件
-  const ProductDetailPage = ({ productId, productsData, onBackToShop, onAddToCart, lang, translations }) => {
+  const ProductDetailPage = ({ productId, productsData, onBackToShop, onAddToCart, lang, translations, getDisplayPrice }) => {
     const product = productsData.find(p => p.id === productId);
 
     if (!product) {
@@ -1250,7 +1291,7 @@ function App() {
             </div>
             <div className="w-full md:w-1/2">
               <h1 className="text-4xl font-extrabold text-red-400 mb-4">{product.name[lang] || product.name.ja || product.name}</h1> {/* 顯示翻譯後的名稱 */}
-              <p className="text-purple-300 text-2xl font-bold mb-4">¥{product.price}</p>
+              <p className="text-purple-300 text-2xl font-bold mb-4">{getDisplayPrice(product.price, lang)}</p>
               {/* 使用 renderDetailedDescription 函數來渲染詳細介紹 */}
               {renderDetailedDescription(product.detailedDescription, lang, translations)}
               <p className="text-gray-400 text-md mb-8">分類: {displayCategory}</p> {/* 顯示翻譯後的分類 */}
@@ -1703,7 +1744,7 @@ function App() {
                   />
                   <div className="flex-grow">
                     <h4 className="text-xl font-semibold text-red-300">{product.name[lang] || product.name.ja || product.name}</h4> {/* 顯示翻譯後的名稱 */}
-                    <p className="text-gray-400">¥{product.price} | {categoryOptionsMap[product.category] || product.category}</p> {/* 顯示翻譯後的分類 */}
+                    <p className="text-gray-400">{getDisplayPrice(product.price, lang)} | {categoryOptionsMap[product.category] || product.category}</p> {/* 顯示翻譯後的分類 */}
                     <p className="text-gray-500 text-sm italic whitespace-pre-wrap">{product.shortDescription[lang] || product.shortDescription.ja || ''}</p> {/* 顯示翻譯後的簡介，保留換行 */}
                   </div>
                   <div className="flex space-x-2">
@@ -1738,9 +1779,43 @@ function App() {
     );
   };
 
+  // 新增的 WelcomePage 元件
+  const WelcomePage = ({ onSelectLanguage, translations }) => (
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-purple-900 text-white flex flex-col items-center justify-center p-4">
+      <div className="bg-gray-800 bg-opacity-90 rounded-2xl shadow-2xl p-8 md:p-12 max-w-2xl w-full text-center border border-purple-700">
+        <h1 className="text-5xl md:text-6xl font-extrabold text-red-400 mb-8 animate-fade-in">
+          FAU SHOPPING
+        </h1>
+        <h2 className="text-3xl font-bold text-purple-300 mb-8">
+          {translations.ja.selectLanguage}
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {Object.entries(translations.ja.languageOptions).map(([code, name]) => (
+            <button
+              key={code}
+              onClick={() => onSelectLanguage(code)}
+              className="bg-red-600 hover:bg-red-500 text-white text-xl font-bold py-4 px-6 rounded-full shadow-lg transform hover:scale-105 transition-all duration-300"
+            >
+              {name}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
 
   return (
     <div className="font-sans antialiased">
+      {currentPage === 'welcome' && (
+        <WelcomePage
+          onSelectLanguage={(langCode) => {
+            setCurrentLanguage(langCode);
+            setCurrentPage('intro');
+          }}
+          translations={translations}
+        />
+      )}
       {currentPage === 'intro' && (
         <IntroPage onEnterShop={() => setCurrentPage('shop')} lang={currentLanguage} translations={translations} ceoVideoUrl={ceoVideoUrl} appContent={appContent} />
       )}
@@ -1761,6 +1836,7 @@ function App() {
           currentAdVideoIndex={currentAdVideoIndex} // 傳遞當前索引
           isYouTubeAPIReady={isYouTubeAPIReady} // 傳遞 YouTube API 準備狀態
           setCurrentAdVideoIndex={setCurrentAdVideoIndex} // 傳遞更新索引的函數
+          getDisplayPrice={getDisplayPrice} // 傳遞價格顯示函數
         />
       )}
       {currentPage === 'checkout' && (
@@ -1769,6 +1845,7 @@ function App() {
           onBackToShop={() => setCurrentPage('shop')}
           lang={currentLanguage}
           translations={translations}
+          getDisplayPrice={getDisplayPrice} // 傳遞價格顯示函數
         />
       )}
       {currentPage === 'admin' && (
@@ -1790,6 +1867,7 @@ function App() {
           onAddToCart={addToCart}
           lang={currentLanguage}
           translations={translations}
+          getDisplayPrice={getDisplayPrice} // 傳遞價格顯示函數
         />
       )}
 
@@ -1804,6 +1882,7 @@ function App() {
           }}
           lang={currentLanguage}
           translations={translations}
+          getDisplayPrice={getDisplayPrice} // 傳遞價格顯示函數
         />
       )}
 
@@ -1824,4 +1903,5 @@ function App() {
 
 // Render the App component into the root div
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
  
