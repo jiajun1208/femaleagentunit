@@ -143,7 +143,8 @@ function App() {
       submit: '送信',
       translationFailed: '翻譯失敗，請檢查網路連線或稍後再試。', // 雖然不使用自動翻譯，但保留此鍵以防萬一
       advertisement: '廣告',
-      selectLanguage: '語言選擇', // 新增
+      selectLanguage: '言語選択', // 新增
+      todayVisitors: '今日の訪問者', // 新增
     },
     en: {
       appName: 'FAU SHOPPING',
@@ -204,6 +205,7 @@ function App() {
       translationFailed: 'Translation failed, please check network or try again later.',
       advertisement: 'Advertisement',
       selectLanguage: 'Select Language', // 新增
+      todayVisitors: 'Today\'s Visitors', // 新增
     },
     'zh-tw': {
       appName: 'FAU SHOPPING',
@@ -264,6 +266,7 @@ function App() {
       translationFailed: '翻譯失敗，請檢查網路連線或稍後再試。',
       advertisement: '廣告',
       selectLanguage: '選擇語言', // 新增
+      todayVisitors: '今日造訪人次', // 新增
     },
     'zh-cn': {
       appName: 'FAU SHOPPING',
@@ -324,6 +327,7 @@ function App() {
       translationFailed: '翻译失败，请检查网络连接或稍后重试。',
       advertisement: '广告',
       selectLanguage: '选择语言', // 新增
+      todayVisitors: '今日访问人次', // 新增
     },
     ko: {
       appName: 'FAU SHOPPING',
@@ -384,6 +388,7 @@ function App() {
       translationFailed: '번역에 실패했습니다. 네트워크 연결을 확인하거나 나중에 다시 시도하세요.',
       advertisement: '광고',
       selectLanguage: '언어 선택', // 新增
+      todayVisitors: '오늘 방문자', // 新增
     },
   };
 
@@ -403,6 +408,7 @@ function App() {
   const [passwordInput, setPasswordInput] = useState(''); // 密碼輸入框的值
   const [passwordError, setPasswordError] = useState(''); // 密碼錯誤訊息
   const [isYouTubeAPIReady, setIsYouTubeAPIReady] = useState(false); // YouTube API 是否準備就緒
+  const [visitorsCount, setVisitorsCount] = useState(0); // 今日造訪人次統計
 
   // 新增影片 URL 狀態
   const [ceoVideoUrl, setCeoVideoUrl] = useState('https://raw.githubusercontent.com/jiajun1208/femaleagentunit/main/video/CEO.mp4'); // 示例影片，請替換
@@ -606,12 +612,35 @@ function App() {
         console.error("Data useEffect: Error fetching app content from Firestore:", error);
       });
 
+      // 3. 監聽今日造訪人次
+      const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+      const visitorsDocRef = window.firebase.doc(db, `artifacts/${appId}/public/data/visitors/daily_stats`);
+
+      const unsubscribeVisitors = window.firebase.onSnapshot(visitorsDocRef, async (docSnap) => {
+        if (docSnap.exists() && docSnap.data().date === today) {
+          setVisitorsCount(docSnap.data().count);
+          console.log("Data useEffect: Visitors count fetched:", docSnap.data().count);
+        } else {
+          // 如果文件不存在或日期不匹配，則重置計數為 1
+          try {
+            await window.firebase.setDoc(visitorsDocRef, { date: today, count: 1 }, { merge: false });
+            setVisitorsCount(1);
+            console.log("Data useEffect: Visitors count reset to 1 for today.");
+          } catch (error) {
+            console.error("Data useEffect: Error setting initial visitors count:", error);
+          }
+        }
+      }, (error) => {
+        console.error("Data useEffect: Error fetching visitors count from Firestore:", error);
+      });
+
 
       // 清理訂閱
       return () => {
         console.log("Data useEffect: Cleaning up onSnapshot listeners.");
         unsubscribeProducts();
         unsubscribeAppSettings();
+        unsubscribeVisitors(); // 清理訪客計數訂閱
       };
     } else if (isFirebaseReady && !db) {
         console.warn("Data useEffect: Firebase is ready, but db instance is null.");
@@ -843,7 +872,7 @@ function App() {
                   </video>
                 </div>
               ) : (
-                <span className="text-purple-400 mx-auto mb-4 text-4xl">👤</span> // Fallback icon
+                <span className="text-purple-400 mx-auto mb-4 text-4xl">👤</span> {/* Fallback icon */}
               )}
               <h2 className="text-3xl font-bold text-purple-300 mb-4">{translations[lang].ceoProfileTitle}</h2>
               <h3 className="text-2xl font-semibold text-red-300 mb-2">{appContent.ceoName[lang] || appContent.ceoName.ja || '社長姓名'}</h3> {/* 使用動態內容 */}
@@ -896,7 +925,7 @@ function App() {
   };
 
   // 購物頁面組件
-  const ShopPage = ({ products, onAddToCart, cartCount, onViewCart, lang, translations, onCategoryChange, selectedCategory, onViewIntro, onNavigateToAdmin, onProductClick, adVideoUrls, currentAdVideoIndex, isYouTubeAPIReady, setCurrentAdVideoIndex, getDisplayPrice }) => {
+  const ShopPage = ({ products, onAddToCart, cartCount, onViewCart, lang, translations, onCategoryChange, selectedCategory, onViewIntro, onNavigateToAdmin, onProductClick, adVideoUrls, currentAdVideoIndex, isYouTubeAPIReady, setCurrentAdVideoIndex, getDisplayPrice, visitorsCount }) => {
     const currentAdVideoUrl = adVideoUrls.current[currentAdVideoIndex];
     const youtubeVideoId = getYouTubeVideoId(currentAdVideoUrl);
     const isYouTubeAd = youtubeVideoId !== null;
@@ -956,29 +985,34 @@ function App() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-purple-900 text-white flex flex-col">
         {/* 頂部導航欄 */}
-        <header className="w-full bg-gray-900 p-4 shadow-xl flex items-center justify-center relative">
-          {/* 網站名稱居中 */}
-          <h1 className="text-3xl font-extrabold text-red-400">
+        <header className="w-full bg-gray-900 p-4 shadow-xl flex flex-col md:flex-row items-center justify-between relative">
+          {/* 網站名稱 (左側) */}
+          <h1 className="text-3xl font-extrabold text-red-400 mb-2 md:mb-0 md:mr-auto"> {/* md:mr-auto 將其推到左側 */}
             {translations[lang].appName}
           </h1>
 
+          {/* 今日造訪人次統計 (中間) */}
+          <div className="text-lg font-semibold text-purple-300 md:absolute md:left-1/2 md:-translate-x-1/2 mb-2 md:mb-0">
+            {translations[lang].todayVisitors}: {visitorsCount}
+          </div>
+
           {/* 右側按鈕組 */}
-          <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center space-x-4">
+          <div className="flex flex-wrap justify-center md:justify-end gap-2 md:gap-4"> {/* 使用 flex-wrap 和 gap 來處理小螢幕換行 */}
             {/* 管理後台按鈕 */}
             <button
               onClick={onNavigateToAdmin}
-              className="bg-purple-700 hover:bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-300 shadow-md flex items-center space-x-2"
+              className="bg-purple-700 hover:bg-purple-600 text-white px-3 py-1 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-semibold transition-colors duration-300 shadow-md flex items-center space-x-1"
             >
-              ⚙️ {/* Settings icon */}
+              ⚙️
               <span>{translations[lang].adminPanel}</span>
             </button>
 
             {/* 簡介按鈕 */}
             <button
               onClick={onViewIntro}
-              className="bg-purple-700 hover:bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-300 shadow-md flex items-center space-x-2"
+              className="bg-purple-700 hover:bg-purple-600 text-white px-3 py-1 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-semibold transition-colors duration-300 shadow-md flex items-center space-x-1"
             >
-              ℹ️ {/* Info icon */}
+              ℹ️
               <span>{translations[lang].aboutUs}</span>
             </button>
 
@@ -990,7 +1024,7 @@ function App() {
                 const nextIndex = (currentIndex + 1) % languages.length;
                 handleLanguageChange(languages[nextIndex]);
               }}
-              className="bg-purple-700 hover:bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-300 shadow-md"
+              className="bg-purple-700 hover:bg-purple-600 text-white px-3 py-1 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-semibold transition-colors duration-300 shadow-md"
             >
               {translations[lang].languageOptions[lang]}
             </button>
@@ -998,12 +1032,12 @@ function App() {
             {/* 購物車按鈕 */}
             <button
               onClick={onViewCart}
-              className="relative bg-red-700 hover:bg-red-600 text-white p-3 rounded-full shadow-md transform hover:scale-105 transition-transform duration-300"
+              className="relative bg-red-700 hover:bg-red-600 text-white p-2 md:p-3 rounded-full shadow-md transform hover:scale-105 transition-transform duration-300"
               aria-label={translations[lang].viewCart}
             >
-              🛒 {/* ShoppingCart icon */}
+              🛒
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-purple-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-purple-500 text-white text-xs font-bold rounded-full h-4 w-4 md:h-5 md:w-5 flex items-center justify-center">
                   {cartCount}
                 </span>
               )}
@@ -1837,6 +1871,7 @@ function App() {
           isYouTubeAPIReady={isYouTubeAPIReady} // 傳遞 YouTube API 準備狀態
           setCurrentAdVideoIndex={setCurrentAdVideoIndex} // 傳遞更新索引的函數
           getDisplayPrice={getDisplayPrice} // 傳遞價格顯示函數
+          visitorsCount={visitorsCount} // 傳遞訪客計數
         />
       )}
       {currentPage === 'checkout' && (
