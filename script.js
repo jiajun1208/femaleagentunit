@@ -324,7 +324,7 @@ function App() {
       enterPassword: '请输入密码',
       passwordIncorrect: '密码错误，请重新输入。',
       submit: '提交',
-      translationFailed: '翻译失败，请检查网络连接或稍后重试。',
+      translationFailed: '翻译失败，請檢查网络连接或稍后重试。',
       advertisement: '广告',
       selectLanguage: '选择语言', // 新增
       todayVisitors: '今日访问人次', // 新增
@@ -378,7 +378,7 @@ function App() {
       productUpdated: '제품이 업데이트되었습니다!',
       productDeleted: '제품이 삭제되었습니다!',
       fetchingProducts: '제품을 불러오는 중...',
-      noProducts: '현재 제품이 없습니다.',
+      noProducts: '現在產品がありません。',
       productShortDescription: '간략 설명',
       productDetailedDescription: '상세 설명',
       backToProducts: '제품 목록으로 돌아가기',
@@ -872,7 +872,9 @@ function App() {
                   </video>
                 </div>
               ) : (
-                <span className="text-purple-400 mx-auto mb-4 text-4xl">👤</span> {/* Fallback icon */}
+                <>
+                  <span className="text-purple-400 mx-auto mb-4 text-4xl">👤</span> {/* Fallback icon */}
+                </>
               )}
               <h2 className="text-3xl font-bold text-purple-300 mb-4">{translations[lang].ceoProfileTitle}</h2>
               <h3 className="text-2xl font-semibold text-red-300 mb-2">{appContent.ceoName[lang] || appContent.ceoName.ja || '社長姓名'}</h3> {/* 使用動態內容 */}
@@ -896,7 +898,9 @@ function App() {
                   </video>
                 </div>
               ) : (
-                <span className="text-purple-400 mx-auto mb-4 text-4xl">🏢</span> {/* Fallback icon */}
+                <>
+                  <span className="text-purple-400 mx-auto mb-4 text-4xl">🏢</span> {/* Fallback icon */}
+                </>
               )}
               <h2 className="text-3xl font-bold text-purple-300 mb-4">{translations[lang].companyProfileTitle}</h2>
               <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">{appContent.companyBio[lang] || appContent.companyBio.ja || '公司簡介內容'}</p> {/* 使用動態內容 */}
@@ -1938,6 +1942,7 @@ function App() {
 
 // Render the App component into the root div
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
 
 
  
