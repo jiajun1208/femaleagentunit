@@ -603,7 +603,7 @@ function App() {
           // 如果 Firestore 中沒有內容，則設定預設值
           setAppContent({
             ceoName: { ja: '黒川 智慧', en: 'Kurokawa Chie', 'zh-tw': '黑川 智慧', 'zh-cn': '黑川 智慧', ko: '쿠로카와 치에' },
-            ceoBio: { ja: '黒川グループの会長である黒川智慧は、革新的なリーダーシップと卓越したビジョンで知られています。彼の指導の下、当社は技術と顧客満足度の新たな基準を確立しました。', en: 'Kurokawa Chie, the Chairman of Kurokawa Group, is known for his innovative leadership and exceptional vision. Under his guidance, the company has set new standards in technology and customer satisfaction.', 'zh-tw': '黑川集團董事長黑川智慧以其創新的領導力和卓越的遠見而聞聞。在他的指導下，公司在技術和客戶滿意度方面樹立了新的標準。', 'zh-cn': '黑川集团董事长黑川智慧以其创新的领导力和卓越的远见而闻名。在他的指导下，公司在技术和客户满意度方面树立了新的标准。', ko: '쿠로카와 그룹의 회장인 쿠로카와 치에는 혁신적인 리더십과 탁월한 비전으로 유명합니다. 그의 지도 아래 회사는 기술과 고객 만족도에서 새로운 기준을 세웠습니다。' },
+            ceoBio: { ja: '黒川グループの会長である黒川智慧は、革新的なリーダーシップと卓越したビジョンで知られています。彼の指導の下、当社は技術と顧客満足度の新たな基準を確立しました。', en: 'Kurokawa Chie, the Chairman of Kurokawa Group, is known for his innovative leadership and exceptional vision. Under his guidance, the company has set new standards in technology and customer satisfaction.', 'zh-tw': '黑川集團董事長黑川智慧以其創新的領導力和卓越的遠見而聞聞。在他的指導下，公司在技術和客戶滿意度方面樹立了新的標準。', 'zh-cn': '黑川集团董事长黑川智慧以其创新的领导力和卓越的遠見而闻名。在他的指导下，公司在技术和客户满意度方面树立了新的标准。', ko: '쿠로카와 그룹의 회장인 쿠로카와 치에는 혁신적인 리더십과 탁월한 비전으로 유명합니다. 그의 지도 아래 회사는 기술과 고객 만족도에서 새로운 기준을 세웠습니다。' },
             companyBio: { ja: '黒川グループは、高品質な製品と優れた顧客サービスを提供することに専念する最先端の企業です。私たちは革新を推進し、お客様の生活を豊かにすることを目指しています。', en: 'Kurokawa Group is a cutting-edge enterprise dedicated to providing high-quality products and excellent customer service. We strive to drive innovation and enrich the lives of our customers.', 'zh-tw': '黑川集團是一家致力於提供高品質產品和卓越客戶服務的尖端企業。我們致力於推動創新，豐富客戶的生活。', 'zh-cn': '黑川集团是一家致力于提供高质量产品和卓越客户服务的尖端企业。我们致力于推动创新，丰富客户的生活。', ko: '쿠로카와 그룹은 고품질 제품과 우수한 고객 서비스를 제공하는 데 전념하는 최첨단 기업입니다。우리는 혁신을 추진하고 고객의 삶을 풍요롭게 하는 것을 목표로 합니다。' },
             companyVideoUrl: { ja: 'https://raw.githubusercontent.com/mdn/learning-area/main/html/multimedia-and-embedding/video-and-audio-content/rabbit320.mp4', en: 'https://raw.githubusercontent.com/mdn/learning-area/main/html/multimedia-and-embedding/video-and-audio-content/rabbit320.mp4', 'zh-tw': 'https://raw.githubusercontent.com/mdn/learning-area/main/html/multimedia-and-embedding/video-and-audio-content/rabbit320.mp4', 'zh-cn': 'https://raw.githubusercontent.com/mdn/learning-area/main/html/multimedia-and-embedding/video-and-audio-content/rabbit320.mp4', ko: 'https://raw.githubusercontent.com/mdn/learning-area/main/html/multimedia-and-embedding/video-and-audio-content/rabbit320.mp4' } // 預設公司影片URL
           });
@@ -613,7 +613,7 @@ function App() {
       });
 
       // 3. 監聽今日造訪人次
-      const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+      const today = new Date().toISOString().slice(0, 10); // 格式：YYYY-MM-DD
       const visitorsDocRef = window.firebase.doc(db, `artifacts/${appId}/public/data/visitors/daily_stats`);
 
       const unsubscribeVisitors = window.firebase.onSnapshot(visitorsDocRef, async (docSnap) => {
@@ -896,7 +896,7 @@ function App() {
                   </video>
                 </div>
               ) : (
-                <span className="text-purple-400 mx-auto mb-4 text-4xl">🏢</span> // Fallback icon
+                <span className="text-purple-400 mx-auto mb-4 text-4xl">🏢</span> {/* Fallback icon */}
               )}
               <h2 className="text-3xl font-bold text-purple-300 mb-4">{translations[lang].companyProfileTitle}</h2>
               <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">{appContent.companyBio[lang] || appContent.companyBio.ja || '公司簡介內容'}</p> {/* 使用動態內容 */}
@@ -1938,5 +1938,6 @@ function App() {
 
 // Render the App component into the root div
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
 
  
