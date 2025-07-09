@@ -3,7 +3,7 @@ const React = window.React;
 const ReactDOM = window.ReactDOM;
 
 // Now destructure from the React object
-const { useState, useEffect, useRef } = React; // Import useRef
+const { useState, useEffect, useRef, useCallback } = React; // Import useCallback
 
 // 全局 Firebase 實例 (如果成功初始化)
 let firebaseApp = null;
@@ -145,6 +145,7 @@ function App() {
       advertisement: '廣告',
       selectLanguage: '言語選択', // 新增
       todayVisitors: '今日の訪問者', // 新增
+      cumulativeVisitors: '累計訪問者', // 新增
     },
     en: {
       appName: 'FAU SHOPPING',
@@ -206,6 +207,7 @@ function App() {
       advertisement: 'Advertisement',
       selectLanguage: 'Select Language', // 新增
       todayVisitors: 'Today\'s Visitors', // 新增
+      cumulativeVisitors: 'Cumulative Visitors', // 新增
     },
     'zh-tw': {
       appName: 'FAU SHOPPING',
@@ -267,6 +269,7 @@ function App() {
       advertisement: '廣告',
       selectLanguage: '選擇語言', // 新增
       todayVisitors: '今日造訪人次', // 新增
+      cumulativeVisitors: '累積造訪人次', // 新增
     },
     'zh-cn': {
       appName: 'FAU SHOPPING',
@@ -328,6 +331,7 @@ function App() {
       advertisement: '广告',
       selectLanguage: '选择语言', // 新增
       todayVisitors: '今日访问人次', // 新增
+      cumulativeVisitors: '累计访问人次', // 新增
     },
     ko: {
       appName: 'FAU SHOPPING',
@@ -368,7 +372,7 @@ function App() {
       editProduct: '제품 편집',
       deleteProduct: '제품 삭제',
       productName: '제품명',
-      productPrice: '제품 가격',
+      productPrice: '製品 가격',
       productImage: '제품 이미지 URL',
       productCategory: '제품 카테고리',
       save: '저장',
@@ -378,7 +382,7 @@ function App() {
       productUpdated: '제품이 업데이트되었습니다!',
       productDeleted: '제품이 삭제되었습니다!',
       fetchingProducts: '제품을 불러오는 중...',
-      noProducts: '現在產品がありません。',
+      noProducts: '現在製品がありません。',
       productShortDescription: '간략 설명',
       productDetailedDescription: '상세 설명',
       backToProducts: '제품 목록으로 돌아가기',
@@ -389,6 +393,7 @@ function App() {
       advertisement: '광고',
       selectLanguage: '언어 선택', // 新增
       todayVisitors: '오늘 방문자', // 新增
+      cumulativeVisitors: '누적 방문자', // 新增
     },
   };
 
@@ -409,6 +414,7 @@ function App() {
   const [passwordError, setPasswordError] = useState(''); // 密碼錯誤訊息
   const [isYouTubeAPIReady, setIsYouTubeAPIReady] = useState(false); // YouTube API 是否準備就緒
   const [visitorsCount, setVisitorsCount] = useState(0); // 今日造訪人次統計
+  const [totalVisitorsCount, setTotalVisitorsCount] = useState(0); // 累積造訪人次統計
 
   // 新增影片 URL 狀態
   const [ceoVideoUrl, setCeoVideoUrl] = useState('https://raw.githubusercontent.com/jiajun1208/femaleagentunit/main/video/CEO.mp4'); // 示例影片，請替換
@@ -603,7 +609,7 @@ function App() {
           // 如果 Firestore 中沒有內容，則設定預設值
           setAppContent({
             ceoName: { ja: '黒川 智慧', en: 'Kurokawa Chie', 'zh-tw': '黑川 智慧', 'zh-cn': '黑川 智慧', ko: '쿠로카와 치에' },
-            ceoBio: { ja: '黒川グループの会長である黒川智慧は、革新的なリーダーシップと卓越したビジョンで知られています。彼の指導の下、当社は技術と顧客満足度の新たな基準を確立しました。', en: 'Kurokawa Chie, the Chairman of Kurokawa Group, is known for his innovative leadership and exceptional vision. Under his guidance, the company has set new standards in technology and customer satisfaction.', 'zh-tw': '黑川集團董事長黑川智慧以其創新的領導力和卓越的遠見而聞聞。在他的指導下，公司在技術和客戶滿意度方面樹立了新的標準。', 'zh-cn': '黑川集团董事长黑川智慧以其创新的领导力和卓越的遠見而闻名。在他的指导下，公司在技术和客户满意度方面树立了新的标准。', ko: '쿠로카와 그룹의 회장인 쿠로카와 치에는 혁신적인 리더십과 탁월한 비전으로 유명합니다. 그의 지도 아래 회사는 기술과 고객 만족도에서 새로운 기준을 세웠습니다。' },
+            ceoBio: { ja: '黒川グループの会長である黒川智慧は、革新的なリーダーシップと卓越したビジョンで知られています。彼の指導の下、当社は技術と顧客満足度の新たな基準を確立しました。', en: 'Kurokawa Chie, the Chairman of Kurokawa Group, is known for his innovative leadership and exceptional vision. Under his guidance, the company has set new standards in technology and customer satisfaction.', 'zh-tw': '黑川集團董事長黑川智慧以其創新的領導力和卓越的遠見而聞聞。在他的指導下，公司在技術和客戶滿意度方面樹立了新的標準。', 'zh-cn': '黑川集团董事长黑川智慧以其創新的領導力和卓越的遠見而闻名。在他的指导下，公司在技术和客户满意度方面树立了新的标准。', ko: '쿠로카와 그룹의 회장인 쿠로카와 치에는 혁신적인 리더십과 탁월한 비전으로 유명합니다. 그의 지도 아래 회사는 기술과 고객 만족도에서 새로운 기준을 세웠습니다。' },
             companyBio: { ja: '黒川グループは、高品質な製品と優れた顧客サービスを提供することに専念する最先端の企業です。私たちは革新を推進し、お客様の生活を豊かにすることを目指しています。', en: 'Kurokawa Group is a cutting-edge enterprise dedicated to providing high-quality products and excellent customer service. We strive to drive innovation and enrich the lives of our customers.', 'zh-tw': '黑川集團是一家致力於提供高品質產品和卓越客戶服務的尖端企業。我們致力於推動創新，豐富客戶的生活。', 'zh-cn': '黑川集团是一家致力于提供高质量产品和卓越客户服务的尖端企业。我们致力于推动创新，丰富客户的生活。', ko: '쿠로카와 그룹은 고품질 제품과 우수한 고객 서비스를 제공하는 데 전념하는 최첨단 기업입니다。우리는 혁신을 추진하고 고객의 삶을 풍요롭게 하는 것을 목표로 합니다。' },
             companyVideoUrl: { ja: 'https://raw.githubusercontent.com/mdn/learning-area/main/html/multimedia-and-embedding/video-and-audio-content/rabbit320.mp4', en: 'https://raw.githubusercontent.com/mdn/learning-area/main/html/multimedia-and-embedding/video-and-audio-content/rabbit320.mp4', 'zh-tw': 'https://raw.githubusercontent.com/mdn/learning-area/main/html/multimedia-and-embedding/video-and-audio-content/rabbit320.mp4', 'zh-cn': 'https://raw.githubusercontent.com/mdn/learning-area/main/html/multimedia-and-embedding/video-and-audio-content/rabbit320.mp4', ko: 'https://raw.githubusercontent.com/mdn/learning-area/main/html/multimedia-and-embedding/video-and-audio-content/rabbit320.mp4' } // 預設公司影片URL
           });
@@ -613,25 +619,29 @@ function App() {
       });
 
       // 3. 監聽今日造訪人次
-      const today = new Date().toISOString().slice(0, 10); // 格式：YYYY-MM-DD
-      const visitorsDocRef = window.firebase.doc(db, `artifacts/${appId}/public/data/visitors/daily_stats`);
-
-      const unsubscribeVisitors = window.firebase.onSnapshot(visitorsDocRef, async (docSnap) => {
-        if (docSnap.exists() && docSnap.data().date === today) {
-          setVisitorsCount(docSnap.data().count);
-          console.log("Data useEffect: Visitors count fetched:", docSnap.data().count);
+      const visitorsDailyDocRef = window.firebase.doc(db, `artifacts/${appId}/public/data/visitors/daily_stats`);
+      const unsubscribeDailyVisitors = window.firebase.onSnapshot(visitorsDailyDocRef, (docSnap) => {
+        if (docSnap.exists()) {
+          setVisitorsCount(docSnap.data().count || 0);
+          console.log("Data useEffect: Daily visitors count fetched:", docSnap.data().count);
         } else {
-          // 如果文件不存在或日期不匹配，則重置計數為 1
-          try {
-            await window.firebase.setDoc(visitorsDocRef, { date: today, count: 1 }, { merge: false });
-            setVisitorsCount(1);
-            console.log("Data useEffect: Visitors count reset to 1 for today.");
-          } catch (error) {
-            console.error("Data useEffect: Error setting initial visitors count:", error);
-          }
+          setVisitorsCount(0); // 如果文件不存在，則計數為0
         }
       }, (error) => {
-        console.error("Data useEffect: Error fetching visitors count from Firestore:", error);
+        console.error("Data useEffect: Error fetching daily visitors count from Firestore:", error);
+      });
+
+      // 4. 監聽累積造訪人次
+      const visitorsTotalDocRef = window.firebase.doc(db, `artifacts/${appId}/public/data/visitors/total_stats`);
+      const unsubscribeTotalVisitors = window.firebase.onSnapshot(visitorsTotalDocRef, (docSnap) => {
+        if (docSnap.exists()) {
+          setTotalVisitorsCount(docSnap.data().count || 0);
+          console.log("Data useEffect: Total visitors count fetched:", docSnap.data().count);
+        } else {
+          setTotalVisitorsCount(0); // 如果文件不存在，則計數為0
+        }
+      }, (error) => {
+        console.error("Data useEffect: Error fetching total visitors count from Firestore:", error);
       });
 
 
@@ -640,7 +650,8 @@ function App() {
         console.log("Data useEffect: Cleaning up onSnapshot listeners.");
         unsubscribeProducts();
         unsubscribeAppSettings();
-        unsubscribeVisitors(); // 清理訪客計數訂閱
+        unsubscribeDailyVisitors(); // 清理每日訪客計數訂閱
+        unsubscribeTotalVisitors(); // 清理累積訪客計數訂閱
       };
     } else if (isFirebaseReady && !db) {
         console.warn("Data useEffect: Firebase is ready, but db instance is null.");
@@ -648,6 +659,59 @@ function App() {
         console.log("Data useEffect: Firebase not ready, skipping data fetch.");
     }
   }, [isFirebaseReady, db]); // 依賴於 Firebase 是否準備好和 db 實例
+
+  // 處理造訪人次增加的函數 (使用 useCallback 避免不必要的重新創建)
+  const incrementVisitorCounts = useCallback(async () => {
+    if (!db || !isFirebaseReady) {
+      console.warn("incrementVisitorCounts: Firestore not ready.");
+      return;
+    }
+
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const visitorsDailyDocRef = window.firebase.doc(db, `artifacts/${appId}/public/data/visitors/daily_stats`);
+    const visitorsTotalDocRef = window.firebase.doc(db, `artifacts/${appId}/public/data/visitors/total_stats`);
+    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
+    try {
+      await window.firebase.runTransaction(db, async (transaction) => {
+        // 處理每日造訪人次
+        const dailyDoc = await transaction.get(visitorsDailyDocRef);
+        if (dailyDoc.exists() && dailyDoc.data().date === today) {
+          // 同一天，增加計數
+          const newCount = (dailyDoc.data().count || 0) + 1;
+          transaction.update(visitorsDailyDocRef, { count: newCount });
+          console.log(`Daily visitor count incremented to: ${newCount}`);
+        } else {
+          // 新的一天或文件不存在，重置為 1
+          transaction.set(visitorsDailyDocRef, { date: today, count: 1 });
+          console.log("Daily visitor count reset to 1 for new day.");
+        }
+
+        // 處理累積造訪人次
+        const totalDoc = await transaction.get(visitorsTotalDocRef);
+        if (totalDoc.exists()) {
+          // 累積計數，增加
+          const newTotalCount = (totalDoc.data().count || 0) + 1;
+          transaction.update(visitorsTotalDocRef, { count: newTotalCount });
+          console.log(`Total visitor count incremented to: ${newTotalCount}`);
+        } else {
+          // 累積計數文件不存在，初始化為 1
+          transaction.set(visitorsTotalDocRef, { count: 1 });
+          console.log("Total visitor count initialized to 1.");
+        }
+      });
+    } catch (error) {
+      console.error("Transaction failed: ", error);
+    }
+  }, [isFirebaseReady]); // 依賴於 isFirebaseReady
+
+  // 當頁面切換到 'shop' 且 Firebase 準備就緒時，增加造訪人次
+  useEffect(() => {
+    if (currentPage === 'shop' && isFirebaseReady) {
+      incrementVisitorCounts();
+    }
+  }, [currentPage, isFirebaseReady, incrementVisitorCounts]);
+
 
   // 語言切換邏輯
   const handleLanguageChange = (langCode) => {
@@ -929,7 +993,7 @@ function App() {
   };
 
   // 購物頁面組件
-  const ShopPage = ({ products, onAddToCart, cartCount, onViewCart, lang, translations, onCategoryChange, selectedCategory, onViewIntro, onNavigateToAdmin, onProductClick, adVideoUrls, currentAdVideoIndex, isYouTubeAPIReady, setCurrentAdVideoIndex, getDisplayPrice, visitorsCount }) => {
+  const ShopPage = ({ products, onAddToCart, cartCount, onViewCart, lang, translations, onCategoryChange, selectedCategory, onViewIntro, onNavigateToAdmin, onProductClick, adVideoUrls, currentAdVideoIndex, isYouTubeAPIReady, setCurrentAdVideoIndex, getDisplayPrice, visitorsCount, totalVisitorsCount }) => {
     const currentAdVideoUrl = adVideoUrls.current[currentAdVideoIndex];
     const youtubeVideoId = getYouTubeVideoId(currentAdVideoUrl);
     const isYouTubeAd = youtubeVideoId !== null;
@@ -995,9 +1059,10 @@ function App() {
             {translations[lang].appName}
           </h1>
 
-          {/* 今日造訪人次統計 (中間) */}
-          <div className="text-lg font-semibold text-purple-300 md:absolute md:left-1/2 md:-translate-x-1/2 mb-2 md:mb-0">
-            {translations[lang].todayVisitors}: {visitorsCount}
+          {/* 造訪人次統計 (中間) */}
+          <div className="flex flex-col md:flex-row items-center md:absolute md:left-1/2 md:-translate-x-1/2 mb-2 md:mb-0 text-lg font-semibold text-purple-300">
+            <span>{translations[lang].todayVisitors}: {visitorsCount}</span>
+            <span className="md:ml-4">{translations[lang].cumulativeVisitors}: {totalVisitorsCount}</span>
           </div>
 
           {/* 右側按鈕組 */}
@@ -1876,6 +1941,7 @@ function App() {
           setCurrentAdVideoIndex={setCurrentAdVideoIndex} // 傳遞更新索引的函數
           getDisplayPrice={getDisplayPrice} // 傳遞價格顯示函數
           visitorsCount={visitorsCount} // 傳遞訪客計數
+          totalVisitorsCount={totalVisitorsCount} // 傳遞累積訪客計數
         />
       )}
       {currentPage === 'checkout' && (
