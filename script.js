@@ -269,7 +269,7 @@ function App() {
       ceoProfileTitle: 'CEO 프로필',
       companyProfileTitle: '회사 프로필',
       enterShop: '쇼핑 시작',
-      productsTitle: '제품',
+      productsTitle: '製品',
       addToCart: '장바구니에 추가',
       viewCart: '장바구니 보기',
       cartTitle: '장바구니',
@@ -286,7 +286,7 @@ function App() {
         'zh-cn': '간체 중국어',
         ko: '한국어',
       },
-      productDescription: '고품질 소재로 제작된 현대적이고 세련된 제품입니다。',
+      productDescription: '고품질 소재로 제작된 현대적이고 세련된 製品입니다。',
       allCategories: '모든 카테고리',
       categoryHypnosis: '최면용',
       categoryPossession: '빙의용',
@@ -296,8 +296,8 @@ function App() {
       backToShop: '상점으로 돌아가기',
       placeOrder: '주문하기',
       orderSuccess: '주문해 주셔서 감사합니다!',
-      firebaseSettings: 'Firebase 설정',
-      adminPanel: '관리자 패널',
+      firebaseSettings: 'Firebase 設定',
+      adminPanel: '管理자 패널',
       addProduct: '製品 추가',
       editProduct: '製品 편집',
       deleteProduct: '製品 삭제',
@@ -468,12 +468,7 @@ function App() {
             setIsFirebaseReady(false);
           });
 
-          // 將 Firebase 函數暴露到 window.firebase，以確保兼容性
-          // 雖然在 React 組件內部應直接使用導入的函數，但這可以作為一個通用回退
-          window.firebase = {
-            initializeApp, getAuth, signInAnonymously, getFirestore,
-            doc, collection, onSnapshot, setDoc, updateDoc, deleteDoc, runTransaction
-          };
+          // 移除了 window.firebase = { ... }; 賦值
 
         } catch (error) {
           console.error("App useEffect: Failed to load Firebase SDK or initialize:", error);
@@ -556,7 +551,7 @@ function App() {
           setAppContent({
             ceoName: { ja: '黒川 智慧', en: 'Kurokawa Chie', 'zh-tw': '黑川 智慧', 'zh-cn': '黑川 智慧', ko: '쿠로카와 치에' },
             ceoBio: { ja: '黒川グループの会長である黒川智慧は、革新的なリーダーシップと卓越したビジョンで知られています。彼の指導の下、当社は技術と顧客満足度の新たな基準を確立しました。', en: 'Kurokawa Chie, the Chairman of Kurokawa Group, is known for his innovative leadership and exceptional vision. Under his guidance, the company has set new standards in technology and customer satisfaction.', 'zh-tw': '黑川集團董事長黑川智慧以其創新的領導力和卓越的遠見而聞聞。在他的指導下，公司在技術和客戶滿意度方面樹立了新的標準。', 'zh-cn': '黑川集团董事长黑川智慧以其創新的領導力和卓越的遠見而闻名。在他的指导下，公司在技术和客户满意度方面树立了新的标准。', ko: '쿠로카와 그룹의 회장인 쿠로카와 치에는 혁신적인 리더십과 탁월한 비전으로 유명합니다. 그의 지도 아래 회사는 기술과 고객 만족도에서 새로운 기준을 세웠습니다。' },
-            companyBio: { ja: '黒川グループは、高品質な製品と優れた顧客サービスを提供することに専念する最先端の企業です。私たちは革新を推進し、お客様の生活を豊かにすることを目指しています。', en: 'Kurokawa Group is a cutting-edge enterprise dedicated to providing high-quality products and excellent customer service. We strive to drive innovation and enrich the lives of our customers.', 'zh-tw': '黑川集團是一家致力於提供高品質產品和卓越客戶服務的尖端企業。我們致力於推動創新，豐富客戶的生活。', 'zh-cn': '黑川集团是一家致力于提供高质量产品和卓越客户服务的尖端企业。我们致力于推动创新，丰富客户的生活。', ko: '쿠로카와 그룹은 고품질 제품과 우수한 고객 서비스를 제공하는 데 전념하는 최첨단 기업입니다。우리는 혁신을 추진하고 고객의 삶을 풍요롭게 하는 것을 목표로 합니다。' },
+            companyBio: { ja: '黒川グループは、高品質な製品と優れた顧客サービスを提供することに専念する最先端の企業です。私たちは革新を推進し、お客様の生活を豊かにすることを目指しています。', en: 'Kurokawa Group is a cutting-edge enterprise dedicated to providing high-quality products and excellent customer service. We strive to drive innovation and enrich the lives of our customers.', 'zh-tw': '黑川集團是一家致力於提供高品質產品和卓越客戶服務的尖端企業。我們致力於推動創新，豐富客戶的生活。', 'zh-cn': '黑川集团是一家致力于提供高质量产品和卓越客户服务的尖端企业。我们致力于推动创新，丰富客户的生活。', ko: '쿠로카와 그룹은 고품질 製品과 우수한 고객 서비스를 제공하는 데 전념하는 최첨단 기업입니다。우리는 혁신을 추진하고 고객의 삶을 풍요롭게 하는 것을 목표로 합니다。' },
             companyVideoUrl: { ja: 'https://raw.githubusercontent.com/mdn/learning-area/main/html/multimedia-and-embedding/video-and-audio-content/rabbit320.mp4', en: 'https://raw.githubusercontent.com/mdn/learning-area/main/html/multimedia-and-embedding/video-and-audio-content/rabbit320.mp4', 'zh-tw': 'https://raw.githubusercontent.com/mdn/learning-area/main/html/multimedia-and-embedding/video-and-audio-content/rabbit320.mp4', 'zh-cn': 'https://raw.githubusercontent.com/mdn/learning-area/main/html/multimedia-and-embedding/video-and-audio-content/rabbit320.mp4', ko: 'https://raw.githubusercontent.com/mdn/learning-area/main/html/multimedia-and-embedding/video-and-audio-content/rabbit320.mp4' } // 預設公司影片URL
           });
         }
@@ -619,7 +614,7 @@ function App() {
     // 使用導入的 doc 和 runTransaction 函數
     const visitorsDailyDocRef = doc(firestoreDb, `artifacts/${appId}/public/data/visitors/daily_stats`);
     const visitorsTotalDocRef = doc(firestoreDb, `artifacts/${appId}/public/data/visitors/total_stats`);
-    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    const today = new Date().toISOString().slice(0, 10); //YYYY-MM-DD
 
     try {
       // 動態導入 runTransaction
@@ -1942,7 +1937,3 @@ function App() {
 
 // Render the App component into the root div
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
-
-
-
- 
