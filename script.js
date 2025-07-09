@@ -5,84 +5,14 @@ const ReactDOM = window.ReactDOM;
 // Now destructure from the React object
 const { useState, useEffect, useRef, useCallback } = React; // Import useCallback
 
-// 全局 Firebase 實例 (如果成功初始化)
-let firebaseApp = null;
-let db = null;
-let auth = null;
-
-// 移除 Gemini API 翻譯函數，因為用戶不使用
-// async function translateText(...) { ... }
-
-
-// Firebase 配置彈窗組件 (此組件仍存在，但不再從 AdminPage 觸發)
-const FirebaseConfigModal = ({ onClose, onSave, initialConfig, lang, translations }) => {
-  const [config, setConfig] = useState(initialConfig || {
-    apiKey: '',
-    authDomain: '',
-    projectId: '',
-    storageBucket: '',
-    messagingSenderId: '',
-    appId: '',
-    measurementId: '' // Optional
-  });
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setConfig(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSave = () => {
-    onSave(config);
-    onClose();
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 text-white rounded-lg shadow-xl p-6 w-full max-w-md relative">
-        <button
-          onClick={onClose}
-          className="absolute top-3 right-3 text-gray-400 hover:text-white transition-colors duration-300 rounded-full p-2 bg-gray-700 hover:bg-gray-600"
-          aria-label={translations[lang].close}
-        >
-          ✖ {/* Close icon */}
-        </button>
-        <h2 className="text-3xl font-bold mb-6 text-purple-400 border-b border-purple-700 pb-3">
-          Firebase 設定
-        </h2>
-        <div className="space-y-4">
-          {Object.keys(config).map(key => (
-            <div key={key}>
-              <label htmlFor={key} className="block text-gray-300 text-sm font-semibold mb-1">
-                {key.charAt(0).toUpperCase() + key.slice(1)}:
-              </label>
-              <input
-                type="text"
-                id={key}
-                name={key}
-                value={config[key]}
-                onChange={handleChange}
-                className="w-full p-3 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
-                placeholder={`輸入您的 ${key}`}
-              />
-            </div>
-          ))}
-        </div>
-        <div className="mt-8 flex justify-end space-x-4">
-          <button
-            onClick={handleSave}
-            className="bg-red-600 hover:bg-red-500 text-white px-6 py-3 rounded-full font-semibold transition-colors duration-300 shadow-lg transform hover:scale-105"
-          >
-            儲存設定
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-
 // 應用程式的主要組件
 function App() {
+  // 全局 Firebase 實例 (如果成功初始化) - 現在作為 React 狀態管理
+  const [appInstance, setAppInstance] = useState(null);
+  const [firestoreDb, setFirestoreDb] = useState(null);
+  const [firebaseAuth, setFirebaseAuth] = useState(null);
+  const [isFirebaseReady, setIsFirebaseReady] = useState(false);
+
   // 定義所有語言的翻譯內容
   const translations = {
     ja: {
@@ -327,7 +257,7 @@ function App() {
       enterPassword: '请输入密码',
       passwordIncorrect: '密码错误，请重新输入。',
       submit: '提交',
-      translationFailed: '翻译失败，請檢查网络连接或稍后重试。',
+      translationFailed: '翻译失敗，請檢查网络连接或稍后重试。',
       advertisement: '广告',
       selectLanguage: '选择语言', // 新增
       todayVisitors: '今日访问人次', // 新增
@@ -368,24 +298,24 @@ function App() {
       orderSuccess: '주문해 주셔서 감사합니다!',
       firebaseSettings: 'Firebase 설정',
       adminPanel: '관리자 패널',
-      addProduct: '제품 추가',
-      editProduct: '제품 편집',
-      deleteProduct: '제품 삭제',
-      productName: '제품명',
+      addProduct: '製品 추가',
+      editProduct: '製品 편집',
+      deleteProduct: '製品 삭제',
+      productName: '製品명',
       productPrice: '製品 가격',
-      productImage: '제품 이미지 URL',
-      productCategory: '제품 카테고리',
+      productImage: '製品 이미지 URL',
+      productCategory: '製品 카테고리',
       save: '저장',
       cancel: '취소',
-      confirmDelete: '이 제품을 삭제하시겠습니까?',
-      productAdded: '製品が追加されました!',
-      productUpdated: '製品が更新されました!',
-      productDeleted: '製品が削除されました!',
-      fetchingProducts: '製品を読み込む中...',
+      confirmDelete: '이 製品을 삭제하시겠습니까?',
+      productAdded: '製品이 추가되었습니다!',
+      productUpdated: '製品이 업데이트되었습니다!',
+      productDeleted: '製品이 삭제되었습니다!',
+      fetchingProducts: '製品을 불러오는 중...',
       noProducts: '現在製品がありません。',
       productShortDescription: '간략 설명',
       productDetailedDescription: '상세 설명',
-      backToProducts: '제품 목록으로 돌아가기',
+      backToProducts: '製品 목록으로 돌아가기',
       enterPassword: '비밀번호를 입력하세요',
       passwordIncorrect: '비밀번호가 틀렸습니다. 다시 입력하세요.',
       submit: '제출',
@@ -407,7 +337,6 @@ function App() {
   const [showFirebaseConfigModal, setShowFirebaseConfigModal] = useState(false); // 控制 Firebase 設定彈窗顯示
   const [firebaseConfig, setFirebaseConfig] = useState(null); // 儲存 Firebase 配置
   const [productsData, setProductsData] = useState([]); // 從 Firestore 載入的商品數據
-  const [isFirebaseReady, setIsFirebaseReady] = useState(false); // Firebase 是否初始化完成
   const [selectedProductId, setSelectedProductId] = useState(null); // 儲存選定商品的ID
   const [showPasswordModal, setShowPasswordModal] = useState(false); // 控制密碼輸入框顯示
   const [passwordInput, setPasswordInput] = useState(''); // 密碼輸入框的值
@@ -483,102 +412,119 @@ function App() {
 
   // 載入 Firebase 配置並初始化 Firebase
   useEffect(() => {
-    console.log("App useEffect: Initializing Firebase...");
-    const storedConfig = localStorage.getItem('firebaseConfig');
-    let configToUse = null;
+    const initializeFirebase = async () => {
+      console.log("App useEffect: Initializing Firebase...");
+      const storedConfig = localStorage.getItem('firebaseConfig');
+      let configToUse = null;
 
-    if (storedConfig) {
-      try {
-        configToUse = JSON.parse(storedConfig);
-        // 驗證從 localStorage 載入的配置是否有效
-        if (configToUse && configToUse.apiKey && configToUse.projectId) {
-            setFirebaseConfig(configToUse);
-            console.log("App useEffect: Loaded valid Firebase config from localStorage.");
-        } else {
-            console.warn("App useEffect: localStorage config is invalid or incomplete. Falling back to hardcoded config.");
-            localStorage.removeItem('firebaseConfig'); // 清除無效配置
+      if (storedConfig) {
+        try {
+          configToUse = JSON.parse(storedConfig);
+          // 驗證從 localStorage 載入的配置是否有效
+          if (configToUse && configToUse.apiKey && configToUse.projectId) {
+              setFirebaseConfig(configToUse);
+              console.log("App useEffect: Loaded valid Firebase config from localStorage.");
+          } else {
+              console.warn("App useEffect: localStorage config is invalid or incomplete. Falling back to hardcoded config.");
+              localStorage.removeItem('firebaseConfig'); // 清除無效配置
+          }
+        } catch (e) {
+          console.error("App useEffect: Failed to parse Firebase config from localStorage:", e);
+          localStorage.removeItem('firebaseConfig'); // 清除無效配置
         }
-      } catch (e) {
-        console.error("App useEffect: Failed to parse Firebase config from localStorage:", e);
-        localStorage.removeItem('firebaseConfig'); // 清除無效配置
       }
-    }
-    
-    // 如果 localStorage 沒有有效配置，則使用硬編碼的配置
-    if (!configToUse || !configToUse.apiKey || !configToUse.projectId) {
-        configToUse = firebaseConfigHardcoded;
-        setFirebaseConfig(firebaseConfigHardcoded); // 也儲存到 state
-        console.warn("App useEffect: Using hardcoded Firebase config. Please replace placeholder values with your actual Firebase project details in the code or set them via the Admin Panel's Firebase Settings modal for persistence.");
-    }
-
-    // 在嘗試初始化 Firebase 之前，先印出正在使用的配置
-    console.log("App useEffect: Attempting to initialize Firebase with config:", configToUse);
-    console.log("App useEffect: Current __app_id:", typeof __app_id !== 'undefined' ? __app_id : 'default-app-id');
-
-
-    // 只有當 window.firebase (SDK) 載入且有有效的 configToUse 時才初始化 Firebase
-    if (window.firebase && configToUse && configToUse.apiKey && configToUse.projectId && !firebaseApp) { 
-      firebaseApp = window.firebase.initializeApp(configToUse);
-      db = window.firebase.getFirestore(firebaseApp);
-      auth = window.firebase.getAuth(firebaseApp);
-      console.log("App useEffect: Firebase initialized successfully. Attempting anonymous sign-in...");
       
-      window.firebase.signInAnonymously(auth).then(userCredential => {
-        console.log("App useEffect: Signed in anonymously. User UID:", userCredential.user.uid);
-        setIsFirebaseReady(true); // Firebase 認證完成
-      }).catch(error => {
-        console.error("App useEffect: Anonymous sign-in failed:", error);
-        setIsFirebaseReady(false);
-      });
+      // 如果 localStorage 沒有有效配置，則使用硬編碼的配置
+      if (!configToUse || !configToUse.apiKey || !configToUse.projectId) {
+          configToUse = firebaseConfigHardcoded;
+          setFirebaseConfig(firebaseConfigHardcoded); // 也儲存到 state
+          console.warn("App useEffect: Using hardcoded Firebase config. Please replace placeholder values with your actual Firebase project details in the code or set them via the Admin Panel's Firebase Settings modal for persistence.");
+      }
 
-    } else if (!window.firebase) {
-      console.warn("App useEffect: Firebase SDK not loaded. Please ensure Firebase scripts in index.html are uncommented and loaded correctly.");
-      setIsFirebaseReady(false);
-    } else if (firebaseApp) {
+      console.log("App useEffect: Attempting to initialize Firebase with config:", configToUse);
+      console.log("App useEffect: Current __app_id:", typeof __app_id !== 'undefined' ? __app_id : 'default-app-id');
+
+      // 只有當 appInstance 為 null 時才初始化 Firebase
+      if (!appInstance) {
+        try {
+          // 動態導入 Firebase 模組
+          const { initializeApp } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js");
+          const { getAuth, signInAnonymously } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js");
+          const { getFirestore, doc, collection, onSnapshot, setDoc, updateDoc, deleteDoc, runTransaction } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+
+          const app = initializeApp(configToUse);
+          setAppInstance(app);
+          const firestore = getFirestore(app);
+          setFirestoreDb(firestore);
+          const authInstance = getAuth(app);
+          setFirebaseAuth(authInstance);
+
+          console.log("App useEffect: Firebase initialized successfully. Attempting anonymous sign-in...");
+          signInAnonymously(authInstance).then(userCredential => {
+            console.log("App useEffect: Signed in anonymously. User UID:", userCredential.user.uid);
+            setIsFirebaseReady(true); // Firebase 認證完成
+          }).catch(error => {
+            console.error("App useEffect: Anonymous sign-in failed:", error);
+            setIsFirebaseReady(false);
+          });
+
+          // 將 Firebase 函數暴露到 window.firebase，以確保兼容性
+          // 雖然在 React 組件內部應直接使用導入的函數，但這可以作為一個通用回退
+          window.firebase = {
+            initializeApp, getAuth, signInAnonymously, getFirestore,
+            doc, collection, onSnapshot, setDoc, updateDoc, deleteDoc, runTransaction
+          };
+
+        } catch (error) {
+          console.error("App useEffect: Failed to load Firebase SDK or initialize:", error);
+          setIsFirebaseReady(false);
+        }
+      } else {
         console.log("App useEffect: Firebase already initialized.");
         // 如果已經初始化，確保 isFirebaseReady 狀態正確
-        if (auth.currentUser) {
+        if (firebaseAuth && firebaseAuth.currentUser) {
+          setIsFirebaseReady(true);
+        } else if (firebaseAuth) { // Try anonymous sign-in if auth instance exists but no current user
+          // 動態導入 signInAnonymously 以防它未被正確暴露
+          const { signInAnonymously } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js");
+          signInAnonymously(firebaseAuth).then(userCredential => {
+            console.log("App useEffect: Re-signed in anonymously. User UID:", userCredential.user.uid);
             setIsFirebaseReady(true);
-        } else {
-            // 如果沒有當前用戶，嘗試匿名登入
-            window.firebase.signInAnonymously(auth).then(userCredential => {
-                console.log("App useEffect: Re-signed in anonymously. User UID:", userCredential.user.uid);
-                setIsFirebaseReady(true);
-            }).catch(error => {
-                console.error("App useEffect: Re-anonymous sign-in failed:", error);
-                setIsFirebaseReady(false);
-            });
+          }).catch(error => {
+            console.error("App useEffect: Re-anonymous sign-in failed:", error);
+            setIsFirebaseReady(false);
+          });
         }
-    } else {
-        console.warn("App useEffect: Firebase initialization skipped due to missing or invalid configuration.");
-        setIsFirebaseReady(false);
-    }
+      }
 
-    // 設定 YouTube API readiness callback
-    // 檢查 window.YT 是否已經存在，如果存在則直接設定為 ready
-    if (window.YT && window.YT.Player) {
-      setIsYouTubeAPIReady(true);
-    } else {
-      // 否則，設定 onYouTubeIframeAPIReady 回調函數
-      window.onYouTubeIframeAPIReady = () => {
-        console.log("YouTube IFrame API is ready.");
+      // 設定 YouTube API readiness callback
+      // 檢查 window.YT 是否已經存在，如果存在則直接設定為 ready
+      if (window.YT && window.YT.Player) {
         setIsYouTubeAPIReady(true);
-      };
-    }
+      } else {
+        // 否則，設定 onYouTubeIframeAPIReady 回調函數
+        window.onYouTubeIframeAPIReady = () => {
+          console.log("YouTube IFrame API is ready.");
+          setIsYouTubeAPIReady(true);
+        };
+      }
+    };
 
-  }, []); // 只在組件掛載時運行一次
+    initializeFirebase();
+  }, [appInstance, firebaseAuth]); // 依賴於 appInstance 和 firebaseAuth
 
   // 從 Firestore 實時獲取商品數據和應用程式內容
   useEffect(() => {
     console.log("Data useEffect: isFirebaseReady status:", isFirebaseReady);
-    if (isFirebaseReady && db) {
+    if (isFirebaseReady && firestoreDb) { // 使用 firestoreDb
       const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
       console.log("Data useEffect: Using appId for Firestore path:", appId);
 
       // 1. 監聽商品數據
-      const productsColRef = window.firebase.collection(db, `artifacts/${appId}/public/data/products`);
+      // 使用導入的 collection 和 onSnapshot 函數
+      const productsColRef = collection(firestoreDb, `artifacts/${appId}/public/data/products`);
       console.log("Data useEffect: Setting up onSnapshot listener for products...");
-      const unsubscribeProducts = window.firebase.onSnapshot(productsColRef, (snapshot) => {
+      const unsubscribeProducts = onSnapshot(productsColRef, (snapshot) => {
         const productsList = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
@@ -590,9 +536,10 @@ function App() {
       });
 
       // 2. 監聽應用程式內容 (社長、公司簡介)
-      const appSettingsDocRef = window.firebase.doc(db, `artifacts/${appId}/public/data/appSettings/introContent`);
+      // 使用導入的 doc 和 onSnapshot 函數
+      const appSettingsDocRef = doc(firestoreDb, `artifacts/${appId}/public/data/appSettings/introContent`);
       console.log("Data useEffect: Setting up onSnapshot listener for app content...");
-      const unsubscribeAppSettings = window.firebase.onSnapshot(appSettingsDocRef, (docSnap) => {
+      const unsubscribeAppSettings = onSnapshot(appSettingsDocRef, (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data();
           setAppContent(prev => ({
@@ -618,8 +565,9 @@ function App() {
       });
 
       // 3. 監聽今日造訪人次
-      const visitorsDailyDocRef = window.firebase.doc(db, `artifacts/${appId}/public/data/visitors/daily_stats`);
-      const unsubscribeDailyVisitors = window.firebase.onSnapshot(visitorsDailyDocRef, (docSnap) => {
+      // 使用導入的 doc 和 onSnapshot 函數
+      const visitorsDailyDocRef = doc(firestoreDb, `artifacts/${appId}/public/data/visitors/daily_stats`);
+      const unsubscribeDailyVisitors = onSnapshot(visitorsDailyDocRef, (docSnap) => {
         if (docSnap.exists()) {
           setVisitorsCount(docSnap.data().count || 0);
           console.log("Data useEffect: Daily visitors count fetched:", docSnap.data().count);
@@ -631,8 +579,9 @@ function App() {
       });
 
       // 4. 監聽累積造訪人次
-      const visitorsTotalDocRef = window.firebase.doc(db, `artifacts/${appId}/public/data/visitors/total_stats`);
-      const unsubscribeTotalVisitors = window.firebase.onSnapshot(visitorsTotalDocRef, (docSnap) => {
+      // 使用導入的 doc 和 onSnapshot 函數
+      const visitorsTotalDocRef = doc(firestoreDb, `artifacts/${appId}/public/data/visitors/total_stats`);
+      const unsubscribeTotalVisitors = onSnapshot(visitorsTotalDocRef, (docSnap) => {
         if (docSnap.exists()) {
           setTotalVisitorsCount(docSnap.data().count || 0);
           console.log("Data useEffect: Total visitors count fetched:", docSnap.data().count);
@@ -652,27 +601,31 @@ function App() {
         unsubscribeDailyVisitors(); // 清理每日訪客計數訂閱
         unsubscribeTotalVisitors(); // 清理累積訪客計數訂閱
       };
-    } else if (isFirebaseReady && !db) {
-        console.warn("Data useEffect: Firebase is ready, but db instance is null.");
+    } else if (isFirebaseReady && !firestoreDb) {
+        console.warn("Data useEffect: Firebase is ready, but firestoreDb instance is null.");
     } else {
         console.log("Data useEffect: Firebase not ready, skipping data fetch.");
     }
-  }, [isFirebaseReady, db]); // 依賴於 Firebase 是否準備好和 db 實例
+  }, [isFirebaseReady, firestoreDb]); // 依賴於 Firebase 是否準備好和 firestoreDb 實例
 
   // 處理造訪人次增加的函數 (使用 useCallback 避免不必要的重新創建)
   const incrementVisitorCounts = useCallback(async () => {
-    if (!db || !isFirebaseReady) {
+    if (!firestoreDb || !isFirebaseReady) {
       console.warn("incrementVisitorCounts: Firestore not ready.");
       return;
     }
 
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-    const visitorsDailyDocRef = window.firebase.doc(db, `artifacts/${appId}/public/data/visitors/daily_stats`);
-    const visitorsTotalDocRef = window.firebase.doc(db, `artifacts/${appId}/public/data/visitors/total_stats`);
+    // 使用導入的 doc 和 runTransaction 函數
+    const visitorsDailyDocRef = doc(firestoreDb, `artifacts/${appId}/public/data/visitors/daily_stats`);
+    const visitorsTotalDocRef = doc(firestoreDb, `artifacts/${appId}/public/data/visitors/total_stats`);
     const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 
     try {
-      await window.firebase.runTransaction(db, async (transaction) => {
+      // 動態導入 runTransaction
+      const { runTransaction } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+
+      await runTransaction(firestoreDb, async (transaction) => {
         // 處理每日造訪人次
         const dailyDoc = await transaction.get(visitorsDailyDocRef);
         if (dailyDoc.exists() && dailyDoc.data().date === today) {
@@ -702,7 +655,7 @@ function App() {
     } catch (error) {
       console.error("Transaction failed: ", error);
     }
-  }, [isFirebaseReady]); // 依賴於 isFirebaseReady
+  }, [isFirebaseReady, firestoreDb]); // 依賴於 isFirebaseReady 和 firestoreDb
 
   // 當頁面切換到 'shop' 且 Firebase 準備就緒時，增加造訪人次
   useEffect(() => {
@@ -1481,15 +1434,11 @@ function App() {
 
     const handleAddOrUpdateProduct = async (e) => {
       e.preventDefault();
-      if (!db) {
+      if (!firestoreDb) { // 使用 firestoreDb
         console.error("AdminPage: Firestore is not initialized.");
         showMessage("Firestore 未初始化，無法操作。請檢查 Firebase 設定。");
         return;
       }
-
-      // 移除 isTranslating 相關邏輯
-      // setIsTranslating(true);
-      // showMessage("正在翻譯商品資訊...");
 
       const productData = {
         price: parseFloat(price),
@@ -1507,14 +1456,16 @@ function App() {
 
         if (editingProduct) {
           // Update product
-          const productRef = window.firebase.doc(db, 'artifacts', appId, 'public', 'data', 'products', editingProduct.id);
-          await window.firebase.setDoc(productRef, productData, { merge: true }); // 使用 merge: true 以合併現有文件
+          // 使用導入的 doc 和 setDoc 函數
+          const productRef = doc(firestoreDb, 'artifacts', appId, 'public', 'data', 'products', editingProduct.id);
+          await setDoc(productRef, productData, { merge: true }); // 使用 merge: true 以合併現有文件
           showMessage(translations[lang].productUpdated);
           console.log("AdminPage: Product updated successfully:", editingProduct.id);
         } else {
           // Add new product
-          const productsColRef = window.firebase.collection(db, 'artifacts', appId, 'public', 'data', 'products');
-          const docRef = await window.firebase.addDoc(productsColRef, productData);
+          // 使用導入的 collection 和 addDoc 函數
+          const productsColRef = collection(firestoreDb, 'artifacts', appId, 'public', 'data', 'products');
+          const docRef = await addDoc(productsColRef, productData);
           showMessage(translations[lang].productAdded);
           console.log("AdminPage: Product added successfully with ID:", docRef.id);
         }
@@ -1529,13 +1480,11 @@ function App() {
       } catch (error) {
         console.error("AdminPage: Error adding/updating product:", error);
         showMessage("操作失敗：" + error.message);
-      } finally {
-        // setIsTranslating(false); // 移除此狀態
       }
     };
 
     const handleDeleteProduct = async (productId) => {
-      if (!db) {
+      if (!firestoreDb) { // 使用 firestoreDb
         console.error("AdminPage: Firestore is not initialized for delete.");
         showMessage("Firestore 未初始化，無法操作。請檢查 Firebase 設定。");
         return;
@@ -1544,8 +1493,9 @@ function App() {
         try {
           // 確保 __app_id 變數存在
           const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-          const productRef = window.firebase.doc(db, 'artifacts', appId, 'public', 'data', 'products', productId);
-          await window.firebase.deleteDoc(productRef);
+          // 使用導入的 doc 和 deleteDoc 函數
+          const productRef = doc(firestoreDb, 'artifacts', appId, 'public', 'data', 'products', productId);
+          await deleteDoc(productRef);
           showMessage(translations[lang].productDeleted);
           console.log("AdminPage: Product deleted successfully:", productId);
         } catch (error) {
@@ -1558,15 +1508,11 @@ function App() {
     // 處理儲存「關於我們」內容
     const handleSaveAboutUsContent = async (e) => {
       e.preventDefault();
-      if (!db) {
+      if (!firestoreDb) { // 使用 firestoreDb
         console.error("AdminPage: Firestore is not initialized for saving about us content.");
         showMessage("Firestore 未初始化，無法操作。請檢查 Firebase 設定。");
         return;
       }
-
-      // 移除 isTranslating 相關邏輯
-      // setIsTranslating(true);
-      // showMessage("正在翻譯關於我們內容...");
 
       const newAppContentData = {
         // 儲存多語言內容，僅更新當前語言的內容
@@ -1578,15 +1524,14 @@ function App() {
 
       try {
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const appSettingsDocRef = window.firebase.doc(db, `artifacts/${appId}/public/data/appSettings/introContent`);
-        await window.firebase.setDoc(appSettingsDocRef, newAppContentData, { merge: true }); // 使用 merge: true
+        // 使用導入的 doc 和 setDoc 函數
+        const appSettingsDocRef = doc(firestoreDb, `artifacts/${appId}/public/data/appSettings/introContent`);
+        await setDoc(appSettingsDocRef, newAppContentData, { merge: true }); // 使用 merge: true
         showMessage("關於我們內容已更新！");
         console.log("AdminPage: About us content updated successfully.");
       } catch (error) {
         console.error("AdminPage: Error updating about us content to Firestore:", error); // 更詳細的錯誤日誌
         showMessage(`更新關於我們內容失敗：${error.message}`); // 顯示錯誤訊息
-      } finally {
-        // setIsTranslating(false); // 移除此狀態
       }
     };
 
@@ -1622,13 +1567,6 @@ function App() {
               {message}
             </div>
           )}
-
-          {/* 移除 isTranslating 相關的載入訊息 */}
-          {/* {isTranslating && (
-            <div className="bg-blue-700 text-white text-center py-3 px-6 rounded-lg mb-6 text-lg font-semibold shadow-lg animate-pulse">
-              正在翻譯商品資訊，請稍候...
-            </div>
-          )} */}
 
           {/* 新增/編輯商品表單 */}
           <form onSubmit={handleAddOrUpdateProduct} className="bg-gray-900 p-6 rounded-xl shadow-lg mb-8 border border-purple-800">
@@ -1743,7 +1681,6 @@ function App() {
               <button
                 type="submit"
                 className="bg-red-600 hover:bg-red-500 text-white px-6 py-3 rounded-full font-semibold transition-colors duration-300 shadow-lg transform hover:scale-105"
-                // disabled={isTranslating} // 移除禁用狀態
               >
                 {translations[lang].save}
               </button>
@@ -1752,7 +1689,6 @@ function App() {
                   type="button"
                   onClick={() => setEditingProduct(null)}
                   className="bg-gray-700 hover:bg-gray-600 text-gray-300 px-6 py-3 rounded-full font-semibold transition-colors duration-300 shadow-md"
-                  // disabled={isTranslating} // 移除禁用狀態
                 >
                   {translations[lang].cancel}
                 </button>
@@ -1821,7 +1757,6 @@ function App() {
               <button
                 type="submit"
                 className="bg-red-600 hover:bg-red-500 text-white px-6 py-3 rounded-full font-semibold transition-colors duration-300 shadow-lg transform hover:scale-105"
-                // disabled={isTranslating}
               >
                 儲存關於我們內容
               </button>
