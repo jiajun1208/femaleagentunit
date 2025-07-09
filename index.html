@@ -1,56 +1,85 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="zh-tw">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FAU SHOPPING</title>
-    <!-- Favicon (to prevent 404 error in console) -->
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='50%25' y='50%25' font-size='80' text-anchor='middle' dominant-baseline='central'%3E🛒%3C/text%3E%3C/svg%3E" type="image/svg+xml">
-
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Inter Font (Tailwind default) -->
+    <!-- Google Fonts - Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* 自定義滾動條樣式 */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #333;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #881337; /* Red-900 */
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #b91c1c; /* Red-700 */
+        }
+        /* 淡入動畫 */
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fade-in 0.8s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="bg-gray-900">
+    <div id="root"></div>
 
-    <!-- React CDN - Load FIRST -->
+    <!-- React CDN -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    
-    <!-- Babel Standalone for JSX transformation - Load AFTER React, BEFORE your script -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- Lucide Icons CDN REMOVED to resolve issues -->
-    <!-- <script src="https://unpkg.com/lucide-react@latest/dist/umd/lucide-react.js"></script> -->
-    
-    <!-- Firebase SDKs (IMPORTANT: Uncomment these lines if you plan to use Firebase) -->
+    <!-- Firebase CDN - 確保這些是正確的模組化版本 -->
+    <!-- 注意：您的 script.js 會動態導入這些模組，但保留這些 CDN 鏈接以確保它們在瀏覽器環境中可用 -->
     <script type="module">
-        // Import Firebase modules from CDN
-        // Corrected: Ensure 'addDoc' is not duplicated in the import list
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+        // 這些導入會將 Firebase 模組載入到瀏覽器環境中，供後續的動態導入使用
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, runTransaction, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Make Firebase modules globally available for your main application script
+        // 將 Firebase 模組暴露到 window 對象，以便在 script.js 中動態導入時可以找到它們
         window.firebase = {
-            initializeApp: initializeApp,
-            getAuth: getAuth,
-            signInAnonymously: signInAnonymously,
-            signInWithCustomToken: signInWithCustomToken,
-            onAuthStateChanged: onAuthStateChanged,
-            getFirestore: getFirestore,
-            doc: doc, getDoc: getDoc, addDoc: addDoc, setDoc: setDoc, updateDoc: updateDoc, deleteDoc: deleteDoc, onSnapshot: onSnapshot, collection: collection, query: query, where: where, getDocs: getDocs
+            initializeApp,
+            getAuth,
+            signInAnonymously,
+            signInWithCustomToken,
+            onAuthStateChanged,
+            getFirestore,
+            doc,
+            getDoc,
+            addDoc,
+            setDoc,
+            updateDoc,
+            deleteDoc,
+            onSnapshot,
+            collection,
+            query,
+            where,
+            runTransaction,
+            getDocs
         };
     </script>
     
-</head>
-<body class="bg-black font-sans antialiased">
-    <div id="root"></div>
-
-    <!-- Your React App JavaScript - Load LAST and specify type="text/babel" for JSX -->
-    <script type="text/babel" src="script.js"></script>
-
+    <!-- YouTube IFrame Player API -->
     <script src="https://www.youtube.com/iframe_api"></script>
+
+    <!-- 您的應用程式主腳本 -->
+    <!-- *** 關鍵：確保這裡有 type="module" *** -->
+    <script type="module" src="script.js"></script>
 </body>
 </html>
