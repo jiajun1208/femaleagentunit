@@ -378,10 +378,10 @@ function App() {
       save: '저장',
       cancel: '취소',
       confirmDelete: '이 제품을 삭제하시겠습니까?',
-      productAdded: '제품이 추가되었습니다!',
-      productUpdated: '제품이 업데이트되었습니다!',
-      productDeleted: '제품이 삭제되었습니다!',
-      fetchingProducts: '제품을 불러오는 중...',
+      productAdded: '製品が追加されました!',
+      productUpdated: '製品が更新されました!',
+      productDeleted: '製品が削除されました!',
+      fetchingProducts: '製品を読み込む中...',
       noProducts: '現在製品がありません。',
       productShortDescription: '간략 설명',
       productDetailedDescription: '상세 설명',
@@ -468,15 +468,14 @@ function App() {
   };
 
   // 輔助函數：根據當前語言獲取顯示價格和符號
+  // 修改：價格不顯示小數點
   const getDisplayPrice = (priceInJPY, lang) => {
     const rate = currencyRates[lang] || 1; // 如果沒有找到匯率，預設為 1 (JPY)
     const symbol = currencySymbols[lang] || '¥'; // 如果沒有找到符號，預設為 '¥'
 
     const convertedPrice = priceInJPY * rate;
-    // 對於 JPY 和 KRW，通常不顯示小數點；其他幣別顯示兩位小數
-    const formattedPrice = (lang === 'ja' || lang === 'ko')
-      ? Math.round(convertedPrice).toLocaleString(lang)
-      : convertedPrice.toFixed(2).toLocaleString(lang);
+    // 始終四捨五入到整數並格式化
+    const formattedPrice = Math.round(convertedPrice).toLocaleString(lang);
 
     return `${symbol}${formattedPrice}`;
   };
@@ -1660,7 +1659,7 @@ function App() {
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
                   className="w-full p-3 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500 text-white"
-                  step="0.01"
+                  step="1" // Changed step to 1 to discourage decimals
                   required
                 />
               </div>
