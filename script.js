@@ -320,7 +320,7 @@ function App() {
       passwordIncorrect: '비밀번호가 틀렸습니다. 다시 입력하세요.',
       submit: '제출',
       translationFailed: '번역에 실패했습니다. 네트워크 연결을 확인하거나 나중에 다시 시도하세요.',
-      advertisement: '광고',
+      advertisement: '廣告',
       selectLanguage: '언어 선택', // 新增
       todayVisitors: '오늘 방문자', // 新增
       cumulativeVisitors: '누적 방문자', // 新增
@@ -1937,3 +1937,4 @@ function App() {
 
 // Render the App component into the root div
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
